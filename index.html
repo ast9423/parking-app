@@ -314,8 +314,11 @@ tr:hover td{background:var(--paper)}
   td{padding:6px 8px;white-space:nowrap}
   .mono{font-size:10px}
 
-  /* マップ */
-  .map-container{overflow:auto;-webkit-overflow-scrolling:touch}
+  /* マップ: スマホではページ全体を使って最大表示 */
+  #page-map .body{padding:.5rem}
+  #map-card{margin-bottom:0;padding:.5rem!important}
+  .map-container{overflow:hidden;border-radius:3px}
+  .map-ph{min-height:200px}
   .sp-map{max-height:190px;overflow:auto;-webkit-overflow-scrolling:touch}
   .edit-bar{flex-wrap:wrap;gap:6px}
 
@@ -454,7 +457,7 @@ tr:hover td{background:var(--paper)}
       <button class="btn btn-secondary btn-sm" onclick="uploadBg()">背景画像を変更</button>
       <button class="btn btn-primary btn-sm" onclick="toggleEdit()">完了</button>
     </div>
-    <div class="card" style="padding:.75rem;overflow:visible">
+    <div class="card" id="map-card" style="padding:.75rem;overflow:visible">
       <div class="legend">
         <div class="leg"><div class="leg-sq" style="background:rgba(26,102,64,.78)"></div>空き</div>
         <div class="leg"><div class="leg-sq" style="background:rgba(155,32,32,.82)"></div>契約中</div>
@@ -1044,26 +1047,18 @@ function renderMap(){
   const img=document.getElementById('map-bg'), ph=document.getElementById('map-ph');
   if(l.bgImg){img.src=l.bgImg;img.style.display='block';ph.style.display='none';}
   else{img.style.display='none';ph.style.display='flex';}
-  // PCは固定サイズ、スマホは画面幅に合わせてCSSスケール
-  con.style.width=l.containerW+'px';
-  con.style.height=l.bgImg?'auto':l.containerH+'px';
-  con.style.maxWidth='100%';
-  // transform-origin でスケールダウン（スマホ対応）
+
+  // スマホ: カード内の実際の幅に合わせてスロット座標をスケール再計算
   const isMobile = window.innerWidth <= 640;
-  if(isMobile){
-    const scale = (window.innerWidth - 32) / l.containerW; // 16px margin両側
-    if(scale < 1){
-      con.style.transform = `scale(${scale})`;
-      con.style.transformOrigin = 'top left';
-      con.style.marginBottom = `-${l.containerH*(1-scale)}px`;
-    } else {
-      con.style.transform = '';
-      con.style.marginBottom = '';
-    }
-  } else {
-    con.style.transform = '';
-    con.style.marginBottom = '';
-  }
+  // 利用可能幅 = ウィンドウ幅 - カードpadding(12px*2) - body padding(14px*2)
+  const availW = isMobile ? window.innerWidth - 52 : l.containerW;
+  const scale   = availW / l.containerW;
+  const drawH   = l.bgImg ? 'auto' : Math.round(l.containerH * scale) + 'px';
+
+  con.style.width        = availW + 'px';
+  con.style.height       = drawH;
+  con.style.transform    = '';
+  con.style.marginBottom = '';
   const t=today();
   Object.values(l.slots).forEach(s=>{
     const ac=activeContract(s.id);
@@ -1071,8 +1066,13 @@ function renderMap(){
     const cls=ac?'o':expOnly?'a':'e';
     const div=document.createElement('div');
     div.className='slot-ov '+cls; div.dataset.slotId=s.id;
-    div.style.cssText=`left:${s.x}px;top:${s.y}px;width:${s.w}px;height:${s.h}px`;
-    div.innerHTML=`<div class="ov-id">${s.id}</div><div class="ov-nm">${ac?ac.name:'空き'}</div>${editMode?'<div class="ov-drag-hint">⤢</div>':''}`;
+    const sx=Math.round(s.x*scale), sy=Math.round(s.y*scale);
+    const sw=Math.round(s.w*scale), sh=Math.round(s.h*scale);
+    div.style.cssText=`left:${sx}px;top:${sy}px;width:${sw}px;height:${sh}px`;
+    // スマホではフォントも縮小
+    const fid = Math.max(7, Math.round(9*scale))+'px';
+    const fnm = Math.max(6, Math.round(8*scale))+'px';
+    div.innerHTML=`<div class="ov-id" style="font-size:${fid}">${s.id}</div><div class="ov-nm" style="font-size:${fnm}">${ac?ac.name:'空き'}</div>${editMode?'<div class="ov-drag-hint">⤢</div>':''}`;
     div.addEventListener('click',e=>{if(!editMode){e.stopPropagation();openPopup(s.id,div);}});
     if(editMode){
       initDrag(div,s);
@@ -1248,7 +1248,9 @@ function renderCmMap(){
     let cls='sp-ov '; if(isSelf)cls+='self'; else if(hasAc)cls+='o'; else cls+='e';
     if(s.id===pickedSlot)cls+=' picked';
     const div=document.createElement('div');
-    div.className=cls; div.style.cssText=`left:${s.x}px;top:${s.y}px;width:${s.w}px;height:${s.h}px`;
+    const csx=Math.round(s.x*cmScale), csy=Math.round(s.y*cmScale);
+    const csw=Math.round(s.w*cmScale), csh=Math.round(s.h*cmScale);
+    div.className=cls; div.style.cssText=`left:${csx}px;top:${csy}px;width:${csw}px;height:${csh}px`;
     div.innerHTML=`<div class="sp-ov-id">${s.id}</div><div class="sp-ov-nm">${isSelf?'編集中':hasAc?ac?.name.split(' ')[0]||'契約中':'空き'}</div>`;
     if(!hasAc||isSelf) div.onclick=()=>pickSlot(s.id);
     inner.appendChild(div);
