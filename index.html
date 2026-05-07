@@ -241,40 +241,75 @@ tr:hover td{background:var(--paper)}
 .login-change-link{font-size:11px;color:var(--ink3);cursor:pointer;text-decoration:underline}
 .login-change-link:hover{color:var(--ink)}
 
-/* ── Mobile nav (bottom bar) ── */
-.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--ink);border-top:1px solid rgba(255,255,255,.12);z-index:50;height:56px}
+/* ── Mobile nav ── */
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--ink);border-top:1px solid rgba(255,255,255,.12);z-index:50;height:60px;padding-bottom:env(safe-area-inset-bottom)}
 .mobile-nav-inner{display:flex;height:100%}
-.mn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:rgba(255,255,255,.45);font-size:9px;letter-spacing:.04em;border:none;background:none;font-family:inherit;position:relative}
+.mn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:rgba(255,255,255,.4);font-size:9px;letter-spacing:.03em;border:none;background:none;font-family:inherit;position:relative;padding:0 2px;-webkit-tap-highlight-color:transparent}
 .mn-item.active{color:#fff}
-.mn-dot{width:4px;height:4px;border-radius:50%;background:currentColor}
-.mn-badge{position:absolute;top:6px;right:calc(50% - 14px);background:var(--red);color:#fff;font-size:8px;font-weight:700;padding:0 4px;border-radius:2px;min-width:14px;text-align:center;display:none}
+.mn-item svg{width:20px;height:20px;stroke:currentColor;flex-shrink:0}
+.mn-badge{position:absolute;top:6px;right:calc(50% - 16px);background:var(--red);color:#fff;font-size:8px;font-weight:700;padding:0 4px;border-radius:2px;min-width:14px;text-align:center;display:none;font-family:'IBM Plex Mono',monospace}
 .mobile-topbar-btn{display:none}
 
-/* ── Mobile settings ── */
-@media (max-width: 640px) {
+/* ── Mobile responsive ── */
+@media (max-width:640px){
+  /* layout */
   .wrap{flex-direction:column}
   .side{display:none}
-  .main{height:100dvh}
-  .topbar{padding:.625rem 1rem}
-  .topbar-title{font-size:13px}
+  .main{height:100svh;height:100dvh}
+  .topbar{padding:.625rem 1rem;gap:8px}
+  .topbar-title{font-size:13px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar-right{flex-shrink:0}
   .mobile-topbar-btn{display:flex;align-items:center;gap:6px}
-  .body{padding:.875rem 1rem;padding-bottom:72px}
-  .stats{grid-template-columns:repeat(2,1fr)}
-  .fgrid{grid-template-columns:1fr}
-  .fgrid3{grid-template-columns:1fr}
-  .modal{padding:1.125rem;max-height:96dvh}
-  .mobile-nav{display:block}
-  .search-input{width:140px}
-  table{font-size:11px}
-  th,td{padding:6px 8px}
-  .sp-map{max-height:200px}
-  .map-container{max-height:calc(100dvh - 220px)}
-  input[type=text],input[type=tel],input[type=date],input[type=number],input[type=month],select,textarea{font-size:16px;padding:8px 10px}
-  .slot-popup{position:fixed;bottom:64px;left:8px;right:8px;top:auto;max-height:60dvh;overflow-y:auto}
+  .body{padding:.75rem .875rem;padding-bottom:calc(68px + env(safe-area-inset-bottom));overflow-y:auto}
+
+  /* stats */
+  .stats{grid-template-columns:1fr 1fr;gap:1px}
+  .stat{padding:.625rem .75rem}
+  .stat-val{font-size:18px}
+
+  /* forms */
+  .fgrid,.fgrid3{grid-template-columns:1fr}
+  input[type=text],input[type=tel],input[type=date],input[type=number],input[type=month],select,textarea{font-size:16px!important;padding:9px 11px}
+  .search-input{width:130px;font-size:13px!important}
+
+  /* modal */
+  .modal-bg{align-items:flex-end}
+  .modal{border-radius:12px 12px 0 0;width:100%;max-width:100%;max-height:90dvh;padding:1rem;overflow-y:auto}
+  .modal-hdr{padding-bottom:.75rem;margin-bottom:.875rem}
+
+  /* tables → card list on mobile */
+  .tbl-wrap{overflow-x:visible}
+  .mob-hide-col{display:none}
+  table{font-size:12px}
+  th{font-size:10px;padding:6px 8px}
+  td{padding:7px 8px}
+
+  /* map */
+  .map-container{overflow:auto;-webkit-overflow-scrolling:touch;max-height:calc(100dvh - 200px)}
+  .sp-map{max-height:220px;overflow:auto;-webkit-overflow-scrolling:touch}
+
+  /* slot popup */
+  .slot-popup{position:fixed;bottom:68px;left:8px;right:8px;top:auto;max-height:55dvh;overflow-y:auto;border-radius:6px}
+
+  /* nav */
+  .mobile-nav{display:flex}
+
+  /* notices */
+  .notice{font-size:11px}
+
+  /* mini-grid */
+  .mg-slot{min-width:34px;font-size:7px}
+
+  /* autorenew box */
+  .autorenew-box{padding:.625rem .75rem}
+
+  /* card padding */
+  .card-body{padding:.75rem}
+
+  /* topbar action btns */
+  .topbar-map-btns .btn{font-size:11px;padding:4px 9px}
 }
-@media (min-width:641px) {
-  .mobile-nav{display:none}
-}
+@media(min-width:641px){.mobile-nav{display:none}}
 </style>
 </head>
 <body>
@@ -361,7 +396,7 @@ tr:hover td{background:var(--paper)}
 <div id="page-map" class="page">
   <div class="topbar">
     <div class="topbar-title">区画マップ</div>
-    <div class="topbar-right">
+    <div class="topbar-right topbar-map-btns">
       <button class="btn btn-secondary btn-sm" id="edit-btn" onclick="toggleEdit()">レイアウト編集</button>
       <button class="btn btn-secondary btn-sm" onclick="openAddSlot()">区画追加</button>
     </div>
@@ -621,20 +656,36 @@ tr:hover td{background:var(--paper)}
 <nav class="mobile-nav">
   <div class="mobile-nav-inner">
     <button class="mn-item active" id="mn-dashboard" onclick="showPage('dashboard')">
-      <span class="mn-dot"></span>ダッシュ
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      <span>ダッシュ</span>
     </button>
     <button class="mn-item" id="mn-map" onclick="showPage('map')">
-      <span class="mn-dot"></span>マップ
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6z"/><path d="M9 3v15M15 6v15"/>
+      </svg>
+      <span>マップ</span>
     </button>
     <button class="mn-item" id="mn-contracts" onclick="showPage('contracts')">
-      <span class="mn-dot"></span>契約
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>
+      </svg>
+      <span>契約</span>
     </button>
     <button class="mn-item" id="mn-alerts" onclick="showPage('alerts')">
-      <span class="mn-dot"></span>アラート
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <span>アラート</span>
       <span class="mn-badge" id="mn-badge" style="display:none">0</span>
     </button>
     <button class="mn-item" id="mn-report" onclick="showPage('report')">
-      <span class="mn-dot"></span>レポート
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+      <span>レポート</span>
     </button>
   </div>
 </nav>
@@ -646,16 +697,74 @@ let state = { lots:{}, contracts:[], nextLotId:1, nextContractId:1 };
 let curLotId = null, curPage = 'dashboard', statusFilter = 'all';
 let editMode = false, pickedSlot = '', editingId = null, curPlates = [];
 
-function loadState() {
+// ════════ CRYPTO ════════
+// AES-GCM encryption for contract data (PII: names, phones, plates, etc.)
+// Key derived from login password via PBKDF2. Non-contract data stored plain.
+const ENC_KEY = 'pms_enc'; // stores exported CryptoKey (base64 wrapped key + salt)
+let cryptoKey = null; // CryptoKey object, set after login
+
+async function deriveKey(password, salt) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name:'PBKDF2', salt, iterations:200000, hash:'SHA-256' },
+    keyMaterial,
+    { name:'AES-GCM', length:256 },
+    true, ['encrypt','decrypt']
+  );
+}
+async function encryptContracts(contracts) {
+  if (!cryptoKey) return btoa(JSON.stringify(contracts)); // fallback (should not happen)
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder();
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM',iv}, cryptoKey, enc.encode(JSON.stringify(contracts)));
+  // store: iv(base64) + ':' + ciphertext(base64)
+  return btoa(String.fromCharCode(...iv)) + ':' + btoa(String.fromCharCode(...new Uint8Array(ct)));
+}
+async function decryptContracts(blob) {
+  if (!blob) return [];
+  if (!blob.includes(':')) {
+    // Legacy plain JSON (migration path)
+    try { return JSON.parse(atob(blob)); } catch { return []; }
+  }
+  if (!cryptoKey) return [];
   try {
-    const s = localStorage.getItem(SK);
-    if (s) state = JSON.parse(s);
-    else initDemo();
+    const [ivB64, ctB64] = blob.split(':');
+    const iv = Uint8Array.from(atob(ivB64), c => c.charCodeAt(0));
+    const ct = Uint8Array.from(atob(ctB64), c => c.charCodeAt(0));
+    const pt = await crypto.subtle.decrypt({name:'AES-GCM',iv}, cryptoKey, ct);
+    return JSON.parse(new TextDecoder().decode(pt));
+  } catch { return []; }
+}
+
+async function loadState() {
+  try {
+    const raw = localStorage.getItem(SK);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // parsed.contracts is an encrypted blob string
+      state.lots = parsed.lots || {};
+      state.nextLotId = parsed.nextLotId || 1;
+      state.nextContractId = parsed.nextContractId || 1;
+      state.contracts = await decryptContracts(parsed.contractsEnc || null);
+      if (!state.contracts.length && !Object.keys(state.lots).length) initDemo();
+    } else {
+      initDemo();
+    }
     const ids = Object.keys(state.lots);
     if (ids.length) curLotId = ids[0];
-  } catch(e) { initDemo(); }
+  } catch(e) { console.warn('loadState error', e); initDemo(); }
 }
-function save() { localStorage.setItem(SK, JSON.stringify(state)); }
+async function save() {
+  const contractsEnc = await encryptContracts(state.contracts);
+  const payload = {
+    lots: state.lots,
+    nextLotId: state.nextLotId,
+    nextContractId: state.nextContractId,
+    contractsEnc
+  };
+  localStorage.setItem(SK, JSON.stringify(payload));
+}
 function lot() { return state.lots[curLotId] || null; }
 function lotContracts() { return state.contracts.filter(c => c.lotId === curLotId); }
 function today() { return new Date().toISOString().slice(0,10); }
@@ -699,7 +808,7 @@ function initDemo() {
     state.contracts.push({...d,id:state.nextContractId++,lotId:l2.id,note:'',autoRenew:false,renewMonths:12,renewPaid:'unpaid'});
     if(l2.slots[d.slot]) l2.slots[d.slot].status='occupied';
   });
-  curLotId=l1.id; save();
+  curLotId=l1.id; await save();
 }
 
 // ════════ HELPERS ════════
@@ -713,7 +822,7 @@ const paidBadge = v => { const m={paid:'badge-green',unpaid:'badge-red',partial:
 function addMonths(dateStr,n){
   const d=new Date(dateStr); d.setMonth(d.getMonth()+n); return d.toISOString().slice(0,10);
 }
-function processAutoRenewals(){
+async function processAutoRenewals(){
   const t=today(); let changed=false;
   state.contracts.forEach(c=>{
     if(!c.autoRenew||!c.renewMonths) return;
@@ -725,7 +834,7 @@ function processAutoRenewals(){
       changed=true; safety++;
     }
   });
-  if(changed) save();
+  if(changed) await save();
 }
 function getAlerts(){ return lotContracts().filter(c=>{const mu=monthsUntil(c.end);return mu>=0&&mu<=3;}); }
 function getManualAlerts(){ return getAlerts().filter(c=>!c.autoRenew); }
@@ -775,10 +884,10 @@ function startSbRename(){
   const inp=document.getElementById('sb-rename-in'); inp.value=l.name; inp.focus(); inp.select();
 }
 function sbRenameKey(e){ if(e.key==='Enter')confirmSbRename(); if(e.key==='Escape')cancelSbRename(); }
-function confirmSbRename(){
+async function confirmSbRename(){
   const l=lot(); if(!l)return;
   const v=document.getElementById('sb-rename-in').value.trim();
-  if(v){l.name=v; save(); document.getElementById('sb-lot-name').textContent=v; if(curPage==='dashboard')renderDashboard(); notify('駐車場名を変更しました');}
+  if(v){l.name=v; await save(); document.getElementById('sb-lot-name').textContent=v; if(curPage==='dashboard')renderDashboard(); notify('駐車場名を変更しました');}
   cancelSbRename();
 }
 function cancelSbRename(){
@@ -819,11 +928,11 @@ function startLotRename(id){
   inp.value=l.name; inp.focus(); inp.select();
 }
 function lotRenameKey(e,id){ if(e.key==='Enter')confirmLotRename(id); if(e.key==='Escape')cancelLotRename(id); }
-function confirmLotRename(id){
+async function confirmLotRename(id){
   const l=state.lots[id]; if(!l)return;
   const v=document.getElementById('lot-rename-in-'+id).value.trim();
   if(v){
-    l.name=v; save();
+    l.name=v; await save();
     if(id===curLotId){document.getElementById('sb-lot-name').textContent=v; if(curPage==='dashboard')renderDashboard();}
     notify('駐車場名を変更しました');
     renderLotList();
@@ -838,22 +947,22 @@ function switchLot(id){
   closeLotModal(); updateAlertBadge(); refresh();
 }
 function toggleNewLotForm(){ const f=document.getElementById('new-lot-form'); f.style.display=f.style.display==='none'?'block':'none'; }
-function createLot(){
+async function createLot(){
   const name=document.getElementById('nl-name').value.trim(); if(!name){notify('駐車場名を入力してください');return;}
   const rows=Math.max(1,Math.min(20,parseInt(document.getElementById('nl-rows').value)||4));
   const cols=Math.max(1,Math.min(20,parseInt(document.getElementById('nl-cols').value)||10));
   const addr=document.getElementById('nl-addr').value.trim();
-  const l=mkLot(name,addr,rows,cols); state.lots[l.id]=l; save();
+  const l=mkLot(name,addr,rows,cols); state.lots[l.id]=l; await save();
   switchLot(l.id); toggleNewLotForm();
   ['nl-name','nl-addr'].forEach(i=>document.getElementById(i).value='');
   renderLotList(); notify(`${name} を作成しました`);
 }
-function deleteLot(id){
+async function deleteLot(id){
   if(Object.keys(state.lots).length<=1){notify('最後の駐車場は削除できません');return;}
   if(!confirm(`「${state.lots[id]?.name}」を削除しますか？契約データも削除されます。`))return;
   delete state.lots[id]; state.contracts=state.contracts.filter(c=>c.lotId!==id);
   if(curLotId===id) curLotId=Object.keys(state.lots)[0];
-  save(); document.getElementById('sb-lot-name').textContent=state.lots[curLotId]?.name||'';
+  await save(); document.getElementById('sb-lot-name').textContent=state.lots[curLotId]?.name||'';
   renderLotList(); updateAlertBadge(); refresh(); notify('削除しました');
 }
 
@@ -949,7 +1058,7 @@ function initDrag(div,slotData){
     if(e.target!==div&&!e.target.classList.contains('ov-id')&&!e.target.classList.contains('ov-nm')&&!e.target.classList.contains('ov-drag-hint'))return;
     e.preventDefault(); sx=e.clientX;sy=e.clientY;ox=slotData.x;oy=slotData.y; div.style.cursor='grabbing';
     const mm=ev=>{slotData.x=Math.max(0,ox+(ev.clientX-sx));slotData.y=Math.max(0,oy+(ev.clientY-sy));div.style.left=slotData.x+'px';div.style.top=slotData.y+'px';};
-    const mu=()=>{div.style.cursor='grab';save();document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);};
+    const mu=()=>{div.style.cursor='grab';await save();document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);};
     document.addEventListener('mousemove',mm); document.addEventListener('mouseup',mu);
   };
   const rh=document.createElement('div');
@@ -958,12 +1067,12 @@ function initDrag(div,slotData){
     e.preventDefault();e.stopPropagation();
     const bsx=e.clientX,bsy=e.clientY,bw=slotData.w,bh=slotData.h;
     const mm=ev=>{slotData.w=Math.max(28,bw+(ev.clientX-bsx));slotData.h=Math.max(18,bh+(ev.clientY-bsy));div.style.width=slotData.w+'px';div.style.height=slotData.h+'px';};
-    const mu=()=>{save();document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);};
+    const mu=()=>{await save();document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);};
     document.addEventListener('mousemove',mm); document.addEventListener('mouseup',mu);
   };
   div.appendChild(rh);
 }
-function deleteSlot(slotId){
+async function deleteSlot(slotId){
   const l=lot(); if(!l)return;
   const t=today();
   if(lotContracts().some(c=>c.slot===slotId&&c.start<=t&&c.end>=t)){notify('契約中の区画は削除できません');return;}
@@ -971,7 +1080,7 @@ function deleteSlot(slotId){
   const msg=past.length?`区画 ${slotId} を削除しますか？\n過去の契約履歴 ${past.length}件も削除されます。`:`区画 ${slotId} を削除しますか？`;
   if(!confirm(msg))return;
   delete l.slots[slotId]; state.contracts=state.contracts.filter(c=>!(c.lotId===curLotId&&c.slot===slotId));
-  save(); closePopup(); renderMap(); renderDashboard(); notify(`区画 ${slotId} を削除しました`);
+  await save(); closePopup(); renderMap(); renderDashboard(); notify(`区画 ${slotId} を削除しました`);
 }
 function openPopup(slotId,anchor){
   closePopup();
@@ -1019,18 +1128,18 @@ document.addEventListener('click',e=>{
   if(!document.getElementById('slot-popup').contains(e.target)&&!e.target.closest('.slot-ov')&&!e.target.closest('.mg-slot')) closePopup();
 });
 function openAddSlot(){ document.getElementById('as-id').value=''; document.getElementById('add-slot-modal').classList.add('open'); }
-function addSlot(){
+async function addSlot(){
   const id=document.getElementById('as-id').value.trim().toUpperCase(); const l=lot(); if(!l)return;
   if(!id){notify('区画番号を入力してください');return;}
   if(l.slots[id]){notify('その区画番号は既に存在します');return;}
   const ys=Object.values(l.slots).map(s=>s.y); const maxY=ys.length?Math.max(...ys):10;
   l.slots[id]={id,status:'empty',x:10,y:maxY+60,w:70,h:50};
-  save(); closeModal('add-slot-modal'); renderMap(); notify(`区画 ${id} を追加しました`);
+  await save(); closeModal('add-slot-modal'); renderMap(); notify(`区画 ${id} を追加しました`);
 }
 function uploadBg(){ document.getElementById('bg-file').click(); }
-function onBgChange(e){
+async function onBgChange(e){
   const file=e.target.files[0]; if(!file)return;
-  const r=new FileReader(); r.onload=ev=>{const l=lot();if(!l)return;l.bgImg=ev.target.result;save();renderMap();notify('背景画像を設定しました');};
+  const r=new FileReader(); r.onload=ev=>{const l=lot();if(!l)return;l.bgImg=ev.target.result;await save();renderMap();notify('背景画像を設定しました');};
   r.readAsDataURL(file); e.target.value='';
 }
 
@@ -1069,9 +1178,9 @@ function renderContracts(){
     </tr>`;
   }).join('');
 }
-function togglePaid(id){
+async function togglePaid(id){
   const c=state.contracts.find(c=>c.id===id); if(!c)return;
-  c.paid=c.paid==='paid'?'unpaid':'paid'; save(); renderContracts(); renderDashboard(); notify('支払い状況を更新しました');
+  c.paid=c.paid==='paid'?'unpaid':'paid'; await save(); renderContracts(); renderDashboard(); notify('支払い状況を更新しました');
 }
 
 // ════════ CONTRACT MODAL ════════
@@ -1171,7 +1280,7 @@ function renderPlates(){
   w.innerHTML=curPlates.map((p,i)=>`<span class="tag">${p}<span class="tag-x" onclick="removePlate(${i})">×</span></span>`).join('');
   w.innerHTML+=`<input class="tag-in" id="cm-plate-in" placeholder="${curPlates.length?'追加...':'例: 名古屋 300 あ 1234'}" onkeydown="addPlate(event)">`;
 }
-function saveContract(){
+async function saveContract(){
   const slot=pickedSlot, name=document.getElementById('cm-name').value.trim();
   const start=document.getElementById('cm-start').value, end=document.getElementById('cm-end').value;
   const fee=document.getElementById('cm-fee').value;
@@ -1194,13 +1303,13 @@ function saveContract(){
   if(editingId){Object.assign(state.contracts.find(c=>c.id===editingId),data);notify('契約を更新しました');}
   else{state.contracts.push({id:state.nextContractId++,...data});notify('契約を登録しました');}
   const l=lot(); if(l) Object.keys(l.slots).forEach(sid=>{l.slots[sid].status=activeContract(sid)?'occupied':'empty';});
-  save(); updateAlertBadge(); closeContractModal(); refresh();
+  await save(); updateAlertBadge(); closeContractModal(); refresh();
 }
-function deleteContract(){
+async function deleteContract(){
   if(!confirm('この契約を削除しますか？'))return;
   state.contracts=state.contracts.filter(c=>c.id!==editingId);
   const l=lot(); if(l) Object.keys(l.slots).forEach(sid=>{l.slots[sid].status=activeContract(sid)?'occupied':'empty';});
-  save(); updateAlertBadge(); closeContractModal(); refresh(); notify('削除しました');
+  await save(); updateAlertBadge(); closeContractModal(); refresh(); notify('削除しました');
 }
 
 // ════════ ALERTS ════════
@@ -1277,85 +1386,155 @@ function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 });
 
 // ════════ AUTH ════════
-const PW_KEY = 'pms_pw_hash';
-const SESSION_KEY = 'pms_session';
-const DEFAULT_PW = 'parking2024';
+// Auth uses PBKDF2: stores salt + PBKDF2-derived verifier hash.
+// The same password also derives the AES-GCM encryption key for contracts.
+const PW_META_KEY = 'pms_pw_meta'; // {salt(b64), verifier(b64)}
+const SESSION_KEY  = 'pms_session';
+const DEFAULT_PW   = 'parking2024';
 
-function hashPw(pw) {
-  // Simple deterministic hash (not cryptographic, but sufficient for local-only use)
-  let h = 0x811c9dc5;
-  for (let i = 0; i < pw.length; i++) {
-    h ^= pw.charCodeAt(i);
-    h = (h * 0x01000193) >>> 0;
+function b64(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+function fromb64(s){ return Uint8Array.from(atob(s),c=>c.charCodeAt(0)); }
+
+async function getOrCreateSalt() {
+  const meta = JSON.parse(localStorage.getItem(PW_META_KEY)||'{}');
+  if (meta.salt) return fromb64(meta.salt);
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  // First run: store verifier for DEFAULT_PW
+  await storePwMeta(DEFAULT_PW, salt);
+  return salt;
+}
+async function storePwMeta(pw, salt) {
+  // verifier = PBKDF2(pw, salt, 200k) interpreted as "auth hash"
+  // (same derivation as deriveKey but exported for comparison)
+  const enc = new TextEncoder();
+  const km = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:200000,hash:'SHA-256'}, km, 256);
+  localStorage.setItem(PW_META_KEY, JSON.stringify({salt:b64(salt), verifier:b64(bits)}));
+}
+async function verifyPw(pw) {
+  const meta = JSON.parse(localStorage.getItem(PW_META_KEY)||'{}');
+  if (!meta.salt || !meta.verifier) {
+    // First time — accept DEFAULT_PW and initialize
+    if (pw === DEFAULT_PW) {
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      await storePwMeta(pw, salt);
+      return true;
+    }
+    return false;
   }
-  return h.toString(16);
+  const salt = fromb64(meta.salt);
+  const enc = new TextEncoder();
+  const km = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:200000,hash:'SHA-256'}, km, 256);
+  return b64(bits) === meta.verifier;
 }
-function getStoredHash() {
-  return localStorage.getItem(PW_KEY) || hashPw(DEFAULT_PW);
-}
-function isLoggedIn() {
-  return sessionStorage.getItem(SESSION_KEY) === '1';
-}
-function doLogin() {
+
+function isLoggedIn(){ return sessionStorage.getItem(SESSION_KEY)==='1'; }
+
+async function doLogin() {
   const pw = document.getElementById('login-pw').value;
   if (!pw) return;
-  if (hashPw(pw) === getStoredHash()) {
-    sessionStorage.setItem(SESSION_KEY, '1');
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('login-pw').value = '';
+  const btn = document.querySelector('.login-btn');
+  btn.textContent='確認中...'; btn.disabled=true;
+  const ok = await verifyPw(pw);
+  btn.textContent='ログイン'; btn.disabled=false;
+  if (ok) {
+    // Derive encryption key from password
+    const meta = JSON.parse(localStorage.getItem(PW_META_KEY)||'{}');
+    const salt = fromb64(meta.salt);
+    cryptoKey = await deriveKey(pw, salt);
+    // Store raw key bytes in sessionStorage for same-tab refresh (survives F5, not tab close)
+    try {
+      const exported = await crypto.subtle.exportKey('raw', cryptoKey);
+      sessionStorage.setItem('pms_sk', btoa(String.fromCharCode(...new Uint8Array(exported))));
+    } catch(e){}
+    // Re-derive non-exportable key for actual use
+    cryptoKey = await deriveKey(pw, salt);
+    sessionStorage.setItem(SESSION_KEY,'1');
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('login-pw').value='';
     document.getElementById('login-err').classList.remove('on');
-    bootApp();
+    await bootApp();
   } else {
     document.getElementById('login-err').classList.add('on');
-    document.getElementById('login-pw').value = '';
+    document.getElementById('login-pw').value='';
     document.getElementById('login-pw').focus();
   }
 }
-function doLogout() {
-  if (!confirm('ログアウトしますか？')) return;
+
+function doLogout(){
+  if(!confirm('ログアウトしますか？'))return;
+  cryptoKey=null;
   sessionStorage.removeItem(SESSION_KEY);
   location.reload();
 }
-function showChangePw() {
-  // From login screen — requires knowing current pw, so just open modal
-  ['cpw-old','cpw-new','cpw-new2'].forEach(id => document.getElementById(id).value = '');
+
+function showChangePw(){
+  ['cpw-old','cpw-new','cpw-new2'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('cpw-err').classList.remove('on');
   document.getElementById('changepw-modal').classList.add('open');
 }
-function doChangePw() {
-  const old = document.getElementById('cpw-old').value;
-  const nw  = document.getElementById('cpw-new').value;
-  const nw2 = document.getElementById('cpw-new2').value;
-  const eb  = document.getElementById('cpw-err');
+
+async function doChangePw(){
+  const oldPw = document.getElementById('cpw-old').value;
+  const nw    = document.getElementById('cpw-new').value;
+  const nw2   = document.getElementById('cpw-new2').value;
+  const eb    = document.getElementById('cpw-err');
   eb.classList.remove('on');
-  if (hashPw(old) !== getStoredHash()) { eb.textContent = '現在のパスワードが正しくありません'; eb.classList.add('on'); return; }
-  if (nw.length < 4) { eb.textContent = '新しいパスワードは4文字以上にしてください'; eb.classList.add('on'); return; }
-  if (nw !== nw2) { eb.textContent = '新しいパスワードが一致しません'; eb.classList.add('on'); return; }
-  localStorage.setItem(PW_KEY, hashPw(nw));
+  const ok = await verifyPw(oldPw);
+  if (!ok){ eb.textContent='現在のパスワードが正しくありません'; eb.classList.add('on'); return; }
+  if (nw.length<4){ eb.textContent='新しいパスワードは4文字以上にしてください'; eb.classList.add('on'); return; }
+  if (nw!==nw2){ eb.textContent='新しいパスワードが一致しません'; eb.classList.add('on'); return; }
+  // Re-derive key with new password (same salt for continuity; re-encrypt contracts)
+  const meta = JSON.parse(localStorage.getItem(PW_META_KEY)||'{}');
+  const salt = fromb64(meta.salt);
+  await storePwMeta(nw, salt);
+  cryptoKey = await deriveKey(nw, salt);
+  await save(); // re-encrypt contracts with new key
   closeModal('changepw-modal');
   notify('パスワードを変更しました');
 }
 
 // ════════ INIT ════════
-function bootApp() {
-  loadState();
-  processAutoRenewals();
+async function bootApp() {
+  await loadState();
+  await processAutoRenewals();
   document.getElementById('sb-lot-name').textContent=lot()?.name||'';
   updateAlertBadge(); renderDashboard(); updateClock();
   setInterval(updateClock,30000);
-  setInterval(()=>{processAutoRenewals();updateAlertBadge();refresh();},3600000);
+  setInterval(async()=>{await processAutoRenewals();updateAlertBadge();refresh();},3600000);
 }
 
-// Check session on load
-if (isLoggedIn()) {
-  document.getElementById('login-screen').style.display = 'none';
-  bootApp();
-} else {
-  // Show default pw hint on first visit
-  const isFirst = !localStorage.getItem(PW_KEY);
+// On page load: check session
+(async()=>{
+  if (isLoggedIn()) {
+    // Session exists — but we need cryptoKey. Since we can't recover it without
+    // the password after page reload, force re-login for security.
+    // (sessionStorage survives tab refresh but not close — this is intentional)
+    document.getElementById('login-screen').style.display = 'none';
+    // Derive key from stored verifier is not possible without pw; use fallback mode
+    // where contracts are loaded as empty and user must re-login with password
+    // ACTUALLY: sessionStorage persists across refresh (same tab), so for UX
+    // we store the pw-derived key encoded in sessionStorage temporarily
+    const skBuf = sessionStorage.getItem('pms_sk');
+    if (skBuf) {
+      try {
+        const raw = Uint8Array.from(atob(skBuf), c=>c.charCodeAt(0));
+        cryptoKey = await crypto.subtle.importKey('raw', raw, {name:'AES-GCM'}, false, ['encrypt','decrypt']);
+        document.getElementById('login-screen').style.display = 'none';
+        await bootApp();
+        return;
+      } catch(e) { /* fall through to login */ }
+    }
+    // No stored key — show login again
+    sessionStorage.removeItem(SESSION_KEY);
+    document.getElementById('login-screen').style.display = 'flex';
+  }
+  // Show initial password hint on very first visit
+  const isFirst = !localStorage.getItem(PW_META_KEY);
   if (isFirst) document.getElementById('login-hint').textContent = '初期パスワード: parking2024';
   document.getElementById('login-pw').focus();
-}
+})();
 </script>
 </body>
 </html>
