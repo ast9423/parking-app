@@ -348,6 +348,13 @@ tr:hover td{background:var(--paper)}
   .topbar-map-btns{gap:5px}
   .topbar-map-btns .btn{font-size:11px;padding:4px 8px}
   #cm-map{max-height:170px;overflow:auto;-webkit-overflow-scrolling:touch}
+
+  /* 契約タブのトップバー: タイトル行 + 検索/ボタン行の2行構成 */
+  .topbar-contracts{flex-wrap:wrap;gap:6px;padding:.5rem .875rem}
+  .topbar-contracts .topbar-title{flex:0 0 100%;font-size:13px}
+  .topbar-contracts .topbar-right{flex:0 0 100%;justify-content:space-between;gap:6px}
+  .topbar-contracts .search-input{flex:1;width:auto;min-width:0;font-size:16px!important}
+  .topbar-contracts .btn-primary{flex-shrink:0;white-space:nowrap}
 }
 @media(min-width:641px){.mobile-nav{display:none!important}}
 </style>
@@ -447,7 +454,7 @@ tr:hover td{background:var(--paper)}
       <button class="btn btn-secondary btn-sm" onclick="uploadBg()">背景画像を変更</button>
       <button class="btn btn-primary btn-sm" onclick="toggleEdit()">完了</button>
     </div>
-    <div class="card" style="padding:.75rem">
+    <div class="card" style="padding:.75rem;overflow:visible">
       <div class="legend">
         <div class="leg"><div class="leg-sq" style="background:rgba(26,102,64,.78)"></div>空き</div>
         <div class="leg"><div class="leg-sq" style="background:rgba(155,32,32,.82)"></div>契約中</div>
@@ -466,7 +473,7 @@ tr:hover td{background:var(--paper)}
 
 <!-- CONTRACTS -->
 <div id="page-contracts" class="page">
-  <div class="topbar">
+  <div class="topbar topbar-contracts">
     <div class="topbar-title">月極契約</div>
     <div class="topbar-right">
       <input class="search-input" type="text" placeholder="名前・車番で検索" id="c-search" oninput="renderContracts()">
@@ -1037,7 +1044,26 @@ function renderMap(){
   const img=document.getElementById('map-bg'), ph=document.getElementById('map-ph');
   if(l.bgImg){img.src=l.bgImg;img.style.display='block';ph.style.display='none';}
   else{img.style.display='none';ph.style.display='flex';}
-  con.style.width=l.containerW+'px'; con.style.height=l.bgImg?'auto':l.containerH+'px';
+  // PCは固定サイズ、スマホは画面幅に合わせてCSSスケール
+  con.style.width=l.containerW+'px';
+  con.style.height=l.bgImg?'auto':l.containerH+'px';
+  con.style.maxWidth='100%';
+  // transform-origin でスケールダウン（スマホ対応）
+  const isMobile = window.innerWidth <= 640;
+  if(isMobile){
+    const scale = (window.innerWidth - 32) / l.containerW; // 16px margin両側
+    if(scale < 1){
+      con.style.transform = `scale(${scale})`;
+      con.style.transformOrigin = 'top left';
+      con.style.marginBottom = `-${l.containerH*(1-scale)}px`;
+    } else {
+      con.style.transform = '';
+      con.style.marginBottom = '';
+    }
+  } else {
+    con.style.transform = '';
+    con.style.marginBottom = '';
+  }
   const t=today();
   Object.values(l.slots).forEach(s=>{
     const ac=activeContract(s.id);
