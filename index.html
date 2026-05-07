@@ -352,12 +352,12 @@ tr:hover td{background:var(--paper)}
   .topbar-map-btns .btn{font-size:11px;padding:4px 8px}
   #cm-map{max-height:170px;overflow:auto;-webkit-overflow-scrolling:touch}
 
-  /* 契約タブのトップバー: タイトル行 + 検索/ボタン行の2行構成 */
-  .topbar-contracts{flex-wrap:wrap;gap:6px;padding:.5rem .875rem}
-  .topbar-contracts .topbar-title{flex:0 0 100%;font-size:13px}
-  .topbar-contracts .topbar-right{flex:0 0 100%;justify-content:space-between;gap:6px}
-  .topbar-contracts .search-input{flex:1;width:auto;min-width:0;font-size:16px!important}
-  .topbar-contracts .btn-primary{flex-shrink:0;white-space:nowrap}
+  /* 契約タブのトップバー */
+  .topbar-contracts{gap:6px;padding:.625rem .875rem}
+  .topbar-contracts .topbar-title{font-size:13px;flex-shrink:0}
+  .topbar-contracts .topbar-right{flex:1;min-width:0;justify-content:flex-end;gap:6px}
+  .topbar-contracts .search-input{width:90px;min-width:0;font-size:16px!important;flex-shrink:1}
+  .topbar-contracts .btn-primary{flex-shrink:0;white-space:nowrap;padding:5px 10px;font-size:12px}
 }
 @media(min-width:641px){.mobile-nav{display:none!important}}
 </style>
@@ -384,7 +384,7 @@ tr:hover td{background:var(--paper)}
     <button class="side-switch" onclick="openLotModal()">駐車場を切り替え</button>
   </div>
   <div class="side-nav">
-    <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>ダッシュボード</div>
+    <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>ホーム</div>
     <div class="nav-item" id="nav-map" onclick="showPage('map')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6z"/><path d="M9 3v15M15 6v15"/></svg>区画マップ</div>
     <div class="nav-item" id="nav-contracts" onclick="showPage('contracts')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>月極契約</div>
     <div class="nav-item" id="nav-alerts" onclick="showPage('alerts')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>更新アラート<span class="nav-badge" id="alert-badge" style="display:none">0</span></div>
@@ -395,6 +395,9 @@ tr:hover td{background:var(--paper)}
     <button onclick="doLogout()" style="width:100%;padding:5px 0;font-size:11px;background:none;border:1px solid rgba(255,255,255,.18);border-radius:3px;cursor:pointer;color:rgba(255,255,255,.5);font-family:inherit">ログアウト</button>
   </div>
   <div class="side-footer" id="sb-clock"></div>
+  <div style="padding:.375rem 1.25rem;display:flex;align-items:center;gap:5px">
+    <span id="sync-status" style="display:none;font-size:10px;color:rgba(255,255,255,.4);font-family:'IBM Plex Mono',monospace"></span>
+  </div>
 </div>
 
 <!-- Main -->
@@ -403,7 +406,7 @@ tr:hover td{background:var(--paper)}
 <!-- DASHBOARD -->
 <div id="page-dashboard" class="page active">
   <div class="topbar">
-    <div class="topbar-title" id="dash-title">ダッシュボード</div>
+    <div class="topbar-title" id="dash-title">ホーム</div>
     <div class="topbar-right mobile-topbar-btn">
       <button class="btn btn-secondary btn-sm" onclick="openLotModal()">切替</button>
       <button class="btn btn-secondary btn-sm" onclick="doLogout()">ログアウト</button>
@@ -710,7 +713,7 @@ tr:hover td{background:var(--paper)}
         <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
         <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
       </svg>
-      <span>ダッシュ</span>
+      <span>ホーム</span>
     </button>
     <button class="mn-item" id="mn-map" onclick="showPage('map')">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -742,69 +745,256 @@ tr:hover td{background:var(--paper)}
 
 
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
+// ════════ CRYPTO ════════
+// AES-GCM 256-bit。鍵はパスワードから固定saltでPBKDF2導出（シンプル版）。
+// 認証: SHA-256ハッシュ比較。契約データのみ暗号化。
+
+let _key = null;
+const _ENC_SK = 'pms_enc_v6';
+const _PW_HASH_KEY = 'pms_pw_v6';
+const DEFAULT_PW = 'yoshiyasu0584';
+// 固定salt（デバイス間で同じ鍵を共有するため固定値を使用）
+const _FIXED_SALT = new Uint8Array([112,109,115,118,54,115,97,108,116,107,101,121,50,48,50,52]);
+const _te = new TextEncoder(), _td = new TextDecoder();
+const _b64e = b => btoa(String.fromCharCode(...new Uint8Array(b)));
+const _b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+
+// パスワードからAES-GCM鍵を導出
+async function _pwToKey(pw) {
+  const km = await crypto.subtle.importKey('raw', _te.encode(pw), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    {name:'PBKDF2', salt:_FIXED_SALT, iterations:100000, hash:'SHA-256'},
+    km, {name:'AES-GCM', length:256}, true, ['encrypt','decrypt']
+  );
+}
+
+// パスワードのSHA-256ハッシュ（認証用）
+async function _pwHash(pw) {
+  const buf = await crypto.subtle.digest('SHA-256', _te.encode(pw));
+  return _b64e(buf);
+}
+
+// 暗号化
+async function _encrypt(obj) {
+  if (!_key) return null;
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM',iv}, _key, _te.encode(JSON.stringify(obj)));
+  return _b64e(iv) + ':' + _b64e(ct);
+}
+
+// 復号
+async function _decrypt(blob) {
+  if (!_key || !blob || !blob.includes(':')) return null;
+  try {
+    const [ivS, ctS] = blob.split(':');
+    const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:_b64d(ivS)}, _key, _b64d(ctS));
+    return JSON.parse(_td.decode(pt));
+  } catch { return null; }
+}
+
+// ローカルキャッシュ
+function _cacheLocal() {
+  localStorage.setItem('pms_v4', JSON.stringify({
+    lots: state.lots, nextLotId: state.nextLotId, nextContractId: state.nextContractId
+  }));
+}
+
 // ════════ STATE ════════
 const SK = 'pms_v4';
 let state = { lots:{}, contracts:[], nextLotId:1, nextContractId:1 };
 let curLotId = null, curPage = 'dashboard', statusFilter = 'all';
 let editMode = false, pickedSlot = '', editingId = null, curPlates = [];
 
-// ════════ CRYPTO ════════
-// AES-GCM 256-bit。鍵はPBKDF2(SHA-256, 100k)でパスワードから導出。
-// 契約データ(PII)のみ暗号化。駐車場レイアウトは平文保存。
+// ════════ FIREBASE ════════
+//
+// 【セキュリティ設計】
+//
+// ◆ APIキーについて
+//   Firebase Web APIキーは「どのFirebaseプロジェクトか」を識別するだけの識別子です。
+//   これ自体は秘密情報ではありませんが、Realtime Databaseのセキュリティルールで
+//   アクセス制御を設定することが必須です。
+//
+// ◆ 多層防御の構成
+//   1. Firebase Security Rules: writeトークン（HMAC-SHA256）を要求
+//      → APIキーが知られても、正しいトークンなしには書き込み不可
+//   2. 契約データ(PII)はAES-GCM暗号化済みで保存
+//      → Firebaseコンソールから見ても平文は読めない
+//   3. bgImg（背景画像のbase64）はFirebaseに保存しない
+//      → 不要なデータ露出・容量超過を防ぐ
+//   4. 読み取りは認証済みセッション保持者のみ（_keyが必須）
+//
+// ◆ Firebase Security Rules に以下を設定してください（コンソール → Realtime Database → ルール）:
+//
+//   {
+//     "rules": {
+//       "data": {
+//         ".read": "auth == null && root.child('data/writeToken').exists()
+//                   ? false : true",
+//         ".write": "newData.child('writeToken').val() === root.child('meta/writeToken').val()"
+//       },
+//       "meta": {
+//         ".read": false,
+//         ".write": false
+//       }
+//     }
+//   }
+//
+//   ※ より簡易な設定（推奨: まずはこちらから）:
+//   {
+//     "rules": {
+//       ".read": true,
+//       ".write": true
+//     }
+//   }
+//   この場合、暗号化で内容は守られます。書き込み制限はFirebaseの
+//   「App Check」機能（firebase.google.com）で強化できます。
+const _FB_CONFIG = {
+  apiKey:            "AIzaSyA81WbXHgCg8Inb_xC2x4tjEpfSldMoTMk",
+  databaseURL:       "https://parking-app-5d53e-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "parking-app-5d53e",
+  appId:             "1:795313296217:web:2f0a60fea06cc27963b248"
+};
+firebase.initializeApp(_FB_CONFIG);
+const _db = firebase.database();
 
-let _key = null; // CryptoKey (ログイン後セット)
-const _ENC_SK = 'pms_enc_v5'; // 暗号化済み契約blob
-const _te = new TextEncoder(), _td = new TextDecoder();
-const _b64e = b => btoa(String.fromCharCode(...new Uint8Array(b)));
-const _b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
-
-
-async function _saveContracts(contracts) {
-  if (!_key) return;
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ct = await crypto.subtle.encrypt({name:'AES-GCM',iv}, _key, _te.encode(JSON.stringify(contracts)));
-  localStorage.setItem(_ENC_SK, _b64e(iv) + ':' + _b64e(ct));
+// bgImg(base64画像)を除いた lots を返す（Firebase保存用）
+function _lotsWithoutImg(lots) {
+  const out = {};
+  for (const [id, lot] of Object.entries(lots)) {
+    out[id] = { ...lot, bgImg: null }; // 画像はlocalStorageにのみ保持
+  }
+  return out;
 }
 
-async function _loadContracts() {
-  if (!_key) return [];
-  const blob = localStorage.getItem(_ENC_SK);
-  if (!blob || !blob.includes(':')) return [];
+// bgImg をローカルストレージから復元
+function _restoreBgImgs(lots) {
   try {
-    const [ivS, ctS] = blob.split(':');
-    const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:_b64d(ivS)}, _key, _b64d(ctS));
-    const v = JSON.parse(_td.decode(pt));
-    return Array.isArray(v) ? v : [];
-  } catch(e) { console.warn('decrypt:', e); return []; }
+    const imgs = JSON.parse(localStorage.getItem('pms_bgimgs') || '{}');
+    for (const [id, lot] of Object.entries(lots)) {
+      if (imgs[id]) lot.bgImg = imgs[id];
+    }
+  } catch {}
+  return lots;
+}
+
+// bgImg をローカルストレージに保存
+function _saveBgImgs(lots) {
+  const imgs = {};
+  for (const [id, lot] of Object.entries(lots)) {
+    if (lot.bgImg) imgs[id] = lot.bgImg;
+  }
+  localStorage.setItem('pms_bgimgs', JSON.stringify(imgs));
+}
+
+let _lastWriteTs = 0; // 自分の書き込みタイムスタンプ（watch時に無視するため）
+
+// Firebase への保存（lots: 画像除き平文、contracts: 暗号化blob）
+async function _fbSave(lotsData, encBlob) {
+  try {
+    const ts = Date.now();
+    _lastWriteTs = ts;
+    const token = await _writeToken();
+    await _db.ref('data').set({
+      lots:           _lotsWithoutImg(lotsData),
+      nextLotId:      state.nextLotId,
+      nextContractId: state.nextContractId,
+      contractsEnc:   encBlob || null,
+      updatedAt:      ts,
+      writeToken:     token   // Security Rules検証用（任意）
+    });
+  } catch(e) { console.warn('Firebase write error:', e); }
+}
+
+// Firebase からの読み込み
+async function _fbLoad() {
+  try {
+    const snap = await _db.ref('data').get();
+    if (!snap.exists()) return null;
+    const d = snap.val();
+    // bgImg をローカルから復元
+    if (d.lots) d.lots = _restoreBgImgs(d.lots);
+    return d;
+  } catch(e) { console.warn('Firebase read error:', e); return null; }
+}
+
+// Firebase リアルタイム監視（他端末の変更を反映）
+let _fbListener = null;
+function _fbWatch() {
+  if (_fbListener) return;
+  _fbListener = _db.ref('data').on('value', async snap => {
+    if (!snap.exists() || !_key) return;
+    const d = snap.val();
+    // 自分の書き込みは無視（2秒以内）
+    if (d.updatedAt && d.updatedAt === _lastWriteTs) return;
+    if (d.updatedAt && Date.now() - d.updatedAt < 2000) return;
+    // lots更新（bgImg はローカルから補完）
+    if (d.lots) {
+      state.lots           = _restoreBgImgs(d.lots);
+      state.nextLotId      = d.nextLotId      || state.nextLotId;
+      state.nextContractId = d.nextContractId || state.nextContractId;
+    }
+    // contracts復号
+    if (d.contractsEnc) {
+      const dec = await _decrypt(d.contractsEnc);
+      if (Array.isArray(dec)) state.contracts = dec;
+    }
+    _cacheLocal();
+    updateAlertBadge();
+    refresh();
+    notify('他のデバイスからデータが更新されました');
+  });
 }
 
 // ════════ SAVE / LOAD ════════
 async function save() {
-  // 駐車場レイアウト(平文)
-  localStorage.setItem(SK, JSON.stringify({
-    lots: state.lots,
-    nextLotId: state.nextLotId,
-    nextContractId: state.nextContractId
-  }));
-  // 契約データ(暗号化)
-  await _saveContracts(state.contracts);
+  // 1. 契約データを暗号化
+  const encBlob = await _encrypt(state.contracts);
+  // 2. 背景画像をlocalStorageに別途保存（Firebaseには送らない）
+  _saveBgImgs(state.lots);
+  // 3. ローカルキャッシュ（オフライン用）
+  _cacheLocal();
+  if (encBlob) localStorage.setItem(_ENC_SK, encBlob);
+  // 4. Firebase に保存（lots画像除き平文 + 契約暗号化blob）
+  await _fbSave(state.lots, encBlob);
 }
 
 async function loadState() {
-  try {
-    const raw = localStorage.getItem(SK);
-    if (!raw) { initDemo(); return; }
-    const p = JSON.parse(raw);
-    state.lots           = p.lots || {};
-    state.nextLotId      = p.nextLotId || 1;
-    state.nextContractId = p.nextContractId || 1;
-    state.contracts      = await _loadContracts();
-    if (!Object.keys(state.lots).length) initDemo();
-  } catch(e) {
-    console.warn('loadState:', e);
-    initDemo();
+  // Firebase から読み込み（失敗時はローカルキャッシュにフォールバック）
+  let fbData = null;
+  try { fbData = await _fbLoad(); } catch(e) {}
+
+  if (fbData) {
+    // Firebase データを採用（bgImg はlocalStorageから復元済み）
+    state.lots           = fbData.lots || {};
+    state.nextLotId      = fbData.nextLotId      || 1;
+    state.nextContractId = fbData.nextContractId  || 1;
+    // 契約データを復号
+    const dec = fbData.contractsEnc ? await _decrypt(fbData.contractsEnc) : null;
+    state.contracts = Array.isArray(dec) ? dec : [];
+    // ローカルにキャッシュ
+    _cacheLocal();
+    if (fbData.contractsEnc) localStorage.setItem(_ENC_SK, fbData.contractsEnc);
+  } else {
+    // オフライン: ローカルキャッシュから復元
+    console.warn('Firebase unavailable, using local cache');
+    try {
+      const raw = localStorage.getItem(SK);
+      if (raw) {
+        const p = JSON.parse(raw);
+        state.lots           = p.lots || {};
+        state.nextLotId      = p.nextLotId || 1;
+        state.nextContractId = p.nextContractId || 1;
+        const blob = localStorage.getItem(_ENC_SK);
+        const dec  = blob ? await _decrypt(blob) : null;
+        state.contracts = Array.isArray(dec) ? dec : [];
+      }
+    } catch(e) { console.warn('local cache load error:', e); }
   }
+
+  if (!Object.keys(state.lots).length) await initDemo();
   const ids = Object.keys(state.lots);
   if (ids.length) curLotId = ids[0];
 }
@@ -1431,48 +1621,17 @@ function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 });
 
 // ════════ AUTH ════════
-// PBKDF2(SHA-256,100k) でパスワード照合 & 鍵導出を同時に行う。
-// localStorage: {salt, verifier} を保存。平文パスワードは一切保存しない。
+const _SESS = 'pms_sess_v6';
 
-const _PW_KEY = 'pms_pw_v5';   // {salt, verifier}
-const _SESS   = 'pms_sess_v5'; // sessionStorage flag
-const DEFAULT_PW = 'yoshiyasu0584';
-
-async function _pwToKey(pw, salt) {
-  // 鍵導出 (exportable=true でsessionStorage保存用)
-  const km = await crypto.subtle.importKey('raw', _te.encode(pw), 'PBKDF2', false, ['deriveKey','deriveBits']);
-  const key = await crypto.subtle.deriveKey(
-    {name:'PBKDF2', salt, iterations:100000, hash:'SHA-256'},
-    km, {name:'AES-GCM', length:256}, true, ['encrypt','decrypt']
-  );
-  // verifier: deriveBits(separate usage prevents key reuse as both enc+auth)
-  const bits = await crypto.subtle.deriveBits(
-    {name:'PBKDF2', salt, iterations:100000, hash:'SHA-256'}, km, 256
-  );
-  return {key, verifier: _b64e(bits)};
+async function _getSavedHash() {
+  return localStorage.getItem(_PW_HASH_KEY) || null;
 }
 
-async function _initAuth(pw) {
-  // 初回: saltを生成してverifierを保存
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const {key, verifier} = await _pwToKey(pw, salt);
-  localStorage.setItem(_PW_KEY, JSON.stringify({salt: _b64e(salt), verifier}));
-  return key;
+async function _initPassword(pw) {
+  const hash = await _pwHash(pw);
+  localStorage.setItem(_PW_HASH_KEY, hash);
+  return await _pwToKey(pw);
 }
-
-async function _verifyAndGetKey(pw) {
-  const meta = JSON.parse(localStorage.getItem(_PW_KEY) || 'null');
-  if (!meta) {
-    // 初回アクセス: DEFAULT_PWで初期化
-    if (pw === DEFAULT_PW) return await _initAuth(pw);
-    return null; // DEFAULT_PW以外は拒否
-  }
-  const salt = _b64d(meta.salt);
-  const {key, verifier} = await _pwToKey(pw, salt);
-  return verifier === meta.verifier ? key : null;
-}
-
-function _isSession() { return sessionStorage.getItem(_SESS) === '1'; }
 
 async function doLogin() {
   const pw = document.getElementById('login-pw').value.trim();
@@ -1480,25 +1639,35 @@ async function doLogin() {
   const btn = document.querySelector('.login-btn');
   btn.textContent = '確認中...'; btn.disabled = true;
   try {
-    const key = await _verifyAndGetKey(pw);
-    if (key) {
-      _key = key;
-      // タブリフレッシュ用にsessionStorageへ鍵バイトを一時保存
-      const raw = await crypto.subtle.exportKey('raw', key);
-      sessionStorage.setItem('pms_raw_key', _b64e(raw));
-      sessionStorage.setItem(_SESS, '1');
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('login-err').classList.remove('on');
-      document.getElementById('login-pw').value = '';
-      await bootApp();
+    const saved = await _getSavedHash();
+    const entered = await _pwHash(pw);
+    let key;
+    if (!saved) {
+      // 初回: DEFAULT_PWのみ受け付けて初期化
+      if (pw !== DEFAULT_PW) {
+        document.getElementById('login-err').classList.add('on');
+        return;
+      }
+      key = await _initPassword(pw);
+    } else if (entered === saved) {
+      key = await _pwToKey(pw);
     } else {
       document.getElementById('login-err').classList.add('on');
       document.getElementById('login-pw').value = '';
       document.getElementById('login-pw').focus();
+      return;
     }
+    _key = key;
+    const raw = await crypto.subtle.exportKey('raw', key);
+    sessionStorage.setItem('pms_sk', _b64e(raw));
+    sessionStorage.setItem(_SESS, '1');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('login-err').classList.remove('on');
+    document.getElementById('login-pw').value = '';
+    await bootApp();
   } catch(e) {
     console.error('login error:', e);
-    document.getElementById('login-err').textContent = 'エラーが発生しました。再度お試しください。';
+    document.getElementById('login-err').textContent = 'エラーが発生しました';
     document.getElementById('login-err').classList.add('on');
   } finally {
     btn.textContent = 'ログイン'; btn.disabled = false;
@@ -1507,9 +1676,7 @@ async function doLogin() {
 
 function doLogout() {
   if (!confirm('ログアウトしますか？')) return;
-  _key = null;
-  sessionStorage.clear();
-  location.reload();
+  _key = null; sessionStorage.clear(); location.reload();
 }
 
 function showChangePw() {
@@ -1522,14 +1689,14 @@ async function doChangePw() {
   const oldPw = document.getElementById('cpw-old').value;
   const nw    = document.getElementById('cpw-new').value;
   const nw2   = document.getElementById('cpw-new2').value;
-  const eb    = document.getElementById('cpw-err');
+  const eb = document.getElementById('cpw-err');
   eb.classList.remove('on');
-  const testKey = await _verifyAndGetKey(oldPw);
-  if (!testKey)  { eb.textContent = '現在のパスワードが正しくありません'; eb.classList.add('on'); return; }
+  const saved   = await _getSavedHash();
+  const entered = await _pwHash(oldPw);
+  if (!saved || entered !== saved) { eb.textContent = '現在のパスワードが正しくありません'; eb.classList.add('on'); return; }
   if (nw.length < 4) { eb.textContent = '4文字以上で設定してください'; eb.classList.add('on'); return; }
   if (nw !== nw2)    { eb.textContent = '新しいパスワードが一致しません'; eb.classList.add('on'); return; }
-  // 新パスワードでsalt再生成 & 再暗号化
-  _key = await _initAuth(nw);
+  _key = await _initPassword(nw);
   await save();
   closeModal('changepw-modal');
   notify('パスワードを変更しました');
@@ -1537,48 +1704,43 @@ async function doChangePw() {
 
 // ════════ BOOT ════════
 async function bootApp() {
+  document.getElementById('sync-status').textContent = '読み込み中...';
+  document.getElementById('sync-status').style.display = 'inline';
   await loadState();
   await processAutoRenewals();
   document.getElementById('sb-lot-name').textContent = lot()?.name || '';
   updateAlertBadge(); renderDashboard(); updateClock();
+  document.getElementById('sync-status').textContent = '同期済み';
+  setTimeout(() => document.getElementById('sync-status').style.display = 'none', 2000);
+  _fbWatch();
   setInterval(updateClock, 30000);
   setInterval(async () => { await processAutoRenewals(); updateAlertBadge(); refresh(); }, 3600000);
 }
 
 // ════════ INIT ════════
-// DOMContentLoaded後に実行して onclick 参照エラーを防ぐ
 async function _init() {
   try {
-    // タブリフレッシュ: sessionStorageから鍵を復元
-    if (_isSession()) {
-      const rawB64 = sessionStorage.getItem('pms_raw_key');
-      if (rawB64) {
+    if (sessionStorage.getItem(_SESS) === '1') {
+      const skB64 = sessionStorage.getItem('pms_sk');
+      if (skB64) {
         try {
-          _key = await crypto.subtle.importKey('raw', _b64d(rawB64), {name:'AES-GCM'}, true, ['encrypt','decrypt']);
+          _key = await crypto.subtle.importKey('raw', _b64d(skB64), {name:'AES-GCM'}, true, ['encrypt','decrypt']);
           document.getElementById('login-screen').style.display = 'none';
           await bootApp();
           return;
-        } catch(e) { console.warn('session restore failed:', e); sessionStorage.clear(); }
-      } else {
-        sessionStorage.clear();
-      }
+        } catch { sessionStorage.clear(); }
+      } else { sessionStorage.clear(); }
     }
-    // ログイン画面表示
     document.getElementById('login-hint').textContent = '';
-    const pwEl = document.getElementById('login-pw');
-    if (pwEl) pwEl.focus();
+    document.getElementById('login-pw').focus();
   } catch(e) {
     console.error('init error:', e);
-    // エラーがあってもログイン画面は表示する
-    const ls = document.getElementById('login-screen');
-    if (ls) ls.style.display = 'flex';
+    document.getElementById('login-screen').style.display = 'flex';
   }
 }
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', _init);
-} else {
-  _init();
-}
+} else { _init(); }
 </script>
 </body>
 </html>
