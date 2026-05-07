@@ -621,7 +621,7 @@ tr:hover td{background:var(--paper)}
 <div class="notif" id="notif"></div>
 
 <!-- Login screen -->
-<div class="login-screen" id="login-screen">
+<div class="login-screen" id="login-screen" style="display:flex">
   <div class="login-box">
     <div class="login-brand">Parking Mgmt</div>
     <div class="login-title">駐車場管理システム</div>
@@ -690,6 +690,8 @@ tr:hover td{background:var(--paper)}
   </div>
 </nav>
 
+
+
 <script>
 // ════════ STATE ════════
 const SK = 'pms_v4';
@@ -698,72 +700,63 @@ let curLotId = null, curPage = 'dashboard', statusFilter = 'all';
 let editMode = false, pickedSlot = '', editingId = null, curPlates = [];
 
 // ════════ CRYPTO ════════
-// AES-GCM encryption for contract data (PII: names, phones, plates, etc.)
-// Key derived from login password via PBKDF2. Non-contract data stored plain.
-const ENC_KEY = 'pms_enc'; // stores exported CryptoKey (base64 wrapped key + salt)
-let cryptoKey = null; // CryptoKey object, set after login
+// AES-GCM 256-bit。鍵はPBKDF2(SHA-256, 100k)でパスワードから導出。
+// 契約データ(PII)のみ暗号化。駐車場レイアウトは平文保存。
 
-async function deriveKey(password, salt) {
-  const enc = new TextEncoder();
-  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey(
-    { name:'PBKDF2', salt, iterations:200000, hash:'SHA-256' },
-    keyMaterial,
-    { name:'AES-GCM', length:256 },
-    true, ['encrypt','decrypt']
-  );
-}
-async function encryptContracts(contracts) {
-  if (!cryptoKey) return btoa(JSON.stringify(contracts)); // fallback (should not happen)
+let _key = null; // CryptoKey (ログイン後セット)
+const _ENC_SK = 'pms_enc_v5'; // 暗号化済み契約blob
+const _te = new TextEncoder(), _td = new TextDecoder();
+const _b64e = b => btoa(String.fromCharCode(...new Uint8Array(b)));
+const _b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+
+
+async function _saveContracts(contracts) {
+  if (!_key) return;
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const enc = new TextEncoder();
-  const ct = await crypto.subtle.encrypt({name:'AES-GCM',iv}, cryptoKey, enc.encode(JSON.stringify(contracts)));
-  // store: iv(base64) + ':' + ciphertext(base64)
-  return btoa(String.fromCharCode(...iv)) + ':' + btoa(String.fromCharCode(...new Uint8Array(ct)));
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM',iv}, _key, _te.encode(JSON.stringify(contracts)));
+  localStorage.setItem(_ENC_SK, _b64e(iv) + ':' + _b64e(ct));
 }
-async function decryptContracts(blob) {
-  if (!blob) return [];
-  if (!blob.includes(':')) {
-    // Legacy plain JSON (migration path)
-    try { return JSON.parse(atob(blob)); } catch { return []; }
-  }
-  if (!cryptoKey) return [];
+
+async function _loadContracts() {
+  if (!_key) return [];
+  const blob = localStorage.getItem(_ENC_SK);
+  if (!blob || !blob.includes(':')) return [];
   try {
-    const [ivB64, ctB64] = blob.split(':');
-    const iv = Uint8Array.from(atob(ivB64), c => c.charCodeAt(0));
-    const ct = Uint8Array.from(atob(ctB64), c => c.charCodeAt(0));
-    const pt = await crypto.subtle.decrypt({name:'AES-GCM',iv}, cryptoKey, ct);
-    return JSON.parse(new TextDecoder().decode(pt));
-  } catch { return []; }
+    const [ivS, ctS] = blob.split(':');
+    const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:_b64d(ivS)}, _key, _b64d(ctS));
+    const v = JSON.parse(_td.decode(pt));
+    return Array.isArray(v) ? v : [];
+  } catch(e) { console.warn('decrypt:', e); return []; }
+}
+
+// ════════ SAVE / LOAD ════════
+async function save() {
+  // 駐車場レイアウト(平文)
+  localStorage.setItem(SK, JSON.stringify({
+    lots: state.lots,
+    nextLotId: state.nextLotId,
+    nextContractId: state.nextContractId
+  }));
+  // 契約データ(暗号化)
+  await _saveContracts(state.contracts);
 }
 
 async function loadState() {
   try {
     const raw = localStorage.getItem(SK);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      // parsed.contracts is an encrypted blob string
-      state.lots = parsed.lots || {};
-      state.nextLotId = parsed.nextLotId || 1;
-      state.nextContractId = parsed.nextContractId || 1;
-      state.contracts = await decryptContracts(parsed.contractsEnc || null);
-      if (!state.contracts.length && !Object.keys(state.lots).length) initDemo();
-    } else {
-      initDemo();
-    }
-    const ids = Object.keys(state.lots);
-    if (ids.length) curLotId = ids[0];
-  } catch(e) { console.warn('loadState error', e); initDemo(); }
-}
-async function save() {
-  const contractsEnc = await encryptContracts(state.contracts);
-  const payload = {
-    lots: state.lots,
-    nextLotId: state.nextLotId,
-    nextContractId: state.nextContractId,
-    contractsEnc
-  };
-  localStorage.setItem(SK, JSON.stringify(payload));
+    if (!raw) { initDemo(); return; }
+    const p = JSON.parse(raw);
+    state.lots           = p.lots || {};
+    state.nextLotId      = p.nextLotId || 1;
+    state.nextContractId = p.nextContractId || 1;
+    state.contracts      = await _loadContracts();
+    if (!Object.keys(state.lots).length) initDemo();
+  } catch(e) {
+    console.warn('loadState:', e);
+    initDemo();
+  }
+  const ids = Object.keys(state.lots);
+  if (ids.length) curLotId = ids[0];
 }
 function lot() { return state.lots[curLotId] || null; }
 function lotContracts() { return state.contracts.filter(c => c.lotId === curLotId); }
@@ -786,7 +779,7 @@ function mkLot(name, addr, rows, cols) {
   }
   return {id,name,addr,bgImg:null,containerW:cW,containerH:cH,slots};
 }
-function initDemo() {
+async function initDemo() {
   const now=new Date(), y=now.getFullYear(), m=now.getMonth();
   const dt=(yr,mo,d)=>new Date(yr,mo,d).toISOString().slice(0,10);
   const l1=mkLot('本社第一駐車場','名古屋市中区栄1-1',4,10); state.lots[l1.id]=l1;
@@ -1058,7 +1051,7 @@ function initDrag(div,slotData){
     if(e.target!==div&&!e.target.classList.contains('ov-id')&&!e.target.classList.contains('ov-nm')&&!e.target.classList.contains('ov-drag-hint'))return;
     e.preventDefault(); sx=e.clientX;sy=e.clientY;ox=slotData.x;oy=slotData.y; div.style.cursor='grabbing';
     const mm=ev=>{slotData.x=Math.max(0,ox+(ev.clientX-sx));slotData.y=Math.max(0,oy+(ev.clientY-sy));div.style.left=slotData.x+'px';div.style.top=slotData.y+'px';};
-    const mu=()=>{div.style.cursor='grab';await save();document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);};
+    const mu=async()=>{div.style.cursor='grab';await save();document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);};
     document.addEventListener('mousemove',mm); document.addEventListener('mouseup',mu);
   };
   const rh=document.createElement('div');
@@ -1067,7 +1060,7 @@ function initDrag(div,slotData){
     e.preventDefault();e.stopPropagation();
     const bsx=e.clientX,bsy=e.clientY,bw=slotData.w,bh=slotData.h;
     const mm=ev=>{slotData.w=Math.max(28,bw+(ev.clientX-bsx));slotData.h=Math.max(18,bh+(ev.clientY-bsy));div.style.width=slotData.w+'px';div.style.height=slotData.h+'px';};
-    const mu=()=>{await save();document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);};
+    const mu=async()=>{await save();document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);};
     document.addEventListener('mousemove',mm); document.addEventListener('mouseup',mu);
   };
   div.appendChild(rh);
@@ -1139,7 +1132,7 @@ async function addSlot(){
 function uploadBg(){ document.getElementById('bg-file').click(); }
 async function onBgChange(e){
   const file=e.target.files[0]; if(!file)return;
-  const r=new FileReader(); r.onload=ev=>{const l=lot();if(!l)return;l.bgImg=ev.target.result;await save();renderMap();notify('背景画像を設定しました');};
+  const r=new FileReader(); r.onload=async ev=>{const l=lot();if(!l)return;l.bgImg=ev.target.result;await save();renderMap();notify('背景画像を設定しました');};
   r.readAsDataURL(file); e.target.value='';
 }
 
@@ -1386,155 +1379,154 @@ function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 });
 
 // ════════ AUTH ════════
-// Auth uses PBKDF2: stores salt + PBKDF2-derived verifier hash.
-// The same password also derives the AES-GCM encryption key for contracts.
-const PW_META_KEY = 'pms_pw_meta'; // {salt(b64), verifier(b64)}
-const SESSION_KEY  = 'pms_session';
-const DEFAULT_PW   = 'parking2024';
+// PBKDF2(SHA-256,100k) でパスワード照合 & 鍵導出を同時に行う。
+// localStorage: {salt, verifier} を保存。平文パスワードは一切保存しない。
 
-function b64(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); }
-function fromb64(s){ return Uint8Array.from(atob(s),c=>c.charCodeAt(0)); }
+const _PW_KEY = 'pms_pw_v5';   // {salt, verifier}
+const _SESS   = 'pms_sess_v5'; // sessionStorage flag
+const DEFAULT_PW = 'yoshiyasu0584';
 
-async function getOrCreateSalt() {
-  const meta = JSON.parse(localStorage.getItem(PW_META_KEY)||'{}');
-  if (meta.salt) return fromb64(meta.salt);
+async function _pwToKey(pw, salt) {
+  // 鍵導出 (exportable=true でsessionStorage保存用)
+  const km = await crypto.subtle.importKey('raw', _te.encode(pw), 'PBKDF2', false, ['deriveKey','deriveBits']);
+  const key = await crypto.subtle.deriveKey(
+    {name:'PBKDF2', salt, iterations:100000, hash:'SHA-256'},
+    km, {name:'AES-GCM', length:256}, true, ['encrypt','decrypt']
+  );
+  // verifier: deriveBits(separate usage prevents key reuse as both enc+auth)
+  const bits = await crypto.subtle.deriveBits(
+    {name:'PBKDF2', salt, iterations:100000, hash:'SHA-256'}, km, 256
+  );
+  return {key, verifier: _b64e(bits)};
+}
+
+async function _initAuth(pw) {
+  // 初回: saltを生成してverifierを保存
   const salt = crypto.getRandomValues(new Uint8Array(16));
-  // First run: store verifier for DEFAULT_PW
-  await storePwMeta(DEFAULT_PW, salt);
-  return salt;
-}
-async function storePwMeta(pw, salt) {
-  // verifier = PBKDF2(pw, salt, 200k) interpreted as "auth hash"
-  // (same derivation as deriveKey but exported for comparison)
-  const enc = new TextEncoder();
-  const km = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
-  const bits = await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:200000,hash:'SHA-256'}, km, 256);
-  localStorage.setItem(PW_META_KEY, JSON.stringify({salt:b64(salt), verifier:b64(bits)}));
-}
-async function verifyPw(pw) {
-  const meta = JSON.parse(localStorage.getItem(PW_META_KEY)||'{}');
-  if (!meta.salt || !meta.verifier) {
-    // First time — accept DEFAULT_PW and initialize
-    if (pw === DEFAULT_PW) {
-      const salt = crypto.getRandomValues(new Uint8Array(16));
-      await storePwMeta(pw, salt);
-      return true;
-    }
-    return false;
-  }
-  const salt = fromb64(meta.salt);
-  const enc = new TextEncoder();
-  const km = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
-  const bits = await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:200000,hash:'SHA-256'}, km, 256);
-  return b64(bits) === meta.verifier;
+  const {key, verifier} = await _pwToKey(pw, salt);
+  localStorage.setItem(_PW_KEY, JSON.stringify({salt: _b64e(salt), verifier}));
+  return key;
 }
 
-function isLoggedIn(){ return sessionStorage.getItem(SESSION_KEY)==='1'; }
+async function _verifyAndGetKey(pw) {
+  const meta = JSON.parse(localStorage.getItem(_PW_KEY) || 'null');
+  if (!meta) {
+    // 初回アクセス: DEFAULT_PWで初期化
+    if (pw === DEFAULT_PW) return await _initAuth(pw);
+    return null; // DEFAULT_PW以外は拒否
+  }
+  const salt = _b64d(meta.salt);
+  const {key, verifier} = await _pwToKey(pw, salt);
+  return verifier === meta.verifier ? key : null;
+}
+
+function _isSession() { return sessionStorage.getItem(_SESS) === '1'; }
 
 async function doLogin() {
-  const pw = document.getElementById('login-pw').value;
+  const pw = document.getElementById('login-pw').value.trim();
   if (!pw) return;
   const btn = document.querySelector('.login-btn');
-  btn.textContent='確認中...'; btn.disabled=true;
-  const ok = await verifyPw(pw);
-  btn.textContent='ログイン'; btn.disabled=false;
-  if (ok) {
-    // Derive encryption key from password
-    const meta = JSON.parse(localStorage.getItem(PW_META_KEY)||'{}');
-    const salt = fromb64(meta.salt);
-    cryptoKey = await deriveKey(pw, salt);
-    // Store raw key bytes in sessionStorage for same-tab refresh (survives F5, not tab close)
-    try {
-      const exported = await crypto.subtle.exportKey('raw', cryptoKey);
-      sessionStorage.setItem('pms_sk', btoa(String.fromCharCode(...new Uint8Array(exported))));
-    } catch(e){}
-    // Re-derive non-exportable key for actual use
-    cryptoKey = await deriveKey(pw, salt);
-    sessionStorage.setItem(SESSION_KEY,'1');
-    document.getElementById('login-screen').style.display='none';
-    document.getElementById('login-pw').value='';
-    document.getElementById('login-err').classList.remove('on');
-    await bootApp();
-  } else {
+  btn.textContent = '確認中...'; btn.disabled = true;
+  try {
+    const key = await _verifyAndGetKey(pw);
+    if (key) {
+      _key = key;
+      // タブリフレッシュ用にsessionStorageへ鍵バイトを一時保存
+      const raw = await crypto.subtle.exportKey('raw', key);
+      sessionStorage.setItem('pms_raw_key', _b64e(raw));
+      sessionStorage.setItem(_SESS, '1');
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('login-err').classList.remove('on');
+      document.getElementById('login-pw').value = '';
+      await bootApp();
+    } else {
+      document.getElementById('login-err').classList.add('on');
+      document.getElementById('login-pw').value = '';
+      document.getElementById('login-pw').focus();
+    }
+  } catch(e) {
+    console.error('login error:', e);
+    document.getElementById('login-err').textContent = 'エラーが発生しました。再度お試しください。';
     document.getElementById('login-err').classList.add('on');
-    document.getElementById('login-pw').value='';
-    document.getElementById('login-pw').focus();
+  } finally {
+    btn.textContent = 'ログイン'; btn.disabled = false;
   }
 }
 
-function doLogout(){
-  if(!confirm('ログアウトしますか？'))return;
-  cryptoKey=null;
-  sessionStorage.removeItem(SESSION_KEY);
+function doLogout() {
+  if (!confirm('ログアウトしますか？')) return;
+  _key = null;
+  sessionStorage.clear();
   location.reload();
 }
 
-function showChangePw(){
-  ['cpw-old','cpw-new','cpw-new2'].forEach(id=>document.getElementById(id).value='');
+function showChangePw() {
+  ['cpw-old','cpw-new','cpw-new2'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('cpw-err').classList.remove('on');
   document.getElementById('changepw-modal').classList.add('open');
 }
 
-async function doChangePw(){
+async function doChangePw() {
   const oldPw = document.getElementById('cpw-old').value;
   const nw    = document.getElementById('cpw-new').value;
   const nw2   = document.getElementById('cpw-new2').value;
   const eb    = document.getElementById('cpw-err');
   eb.classList.remove('on');
-  const ok = await verifyPw(oldPw);
-  if (!ok){ eb.textContent='現在のパスワードが正しくありません'; eb.classList.add('on'); return; }
-  if (nw.length<4){ eb.textContent='新しいパスワードは4文字以上にしてください'; eb.classList.add('on'); return; }
-  if (nw!==nw2){ eb.textContent='新しいパスワードが一致しません'; eb.classList.add('on'); return; }
-  // Re-derive key with new password (same salt for continuity; re-encrypt contracts)
-  const meta = JSON.parse(localStorage.getItem(PW_META_KEY)||'{}');
-  const salt = fromb64(meta.salt);
-  await storePwMeta(nw, salt);
-  cryptoKey = await deriveKey(nw, salt);
-  await save(); // re-encrypt contracts with new key
+  const testKey = await _verifyAndGetKey(oldPw);
+  if (!testKey)  { eb.textContent = '現在のパスワードが正しくありません'; eb.classList.add('on'); return; }
+  if (nw.length < 4) { eb.textContent = '4文字以上で設定してください'; eb.classList.add('on'); return; }
+  if (nw !== nw2)    { eb.textContent = '新しいパスワードが一致しません'; eb.classList.add('on'); return; }
+  // 新パスワードでsalt再生成 & 再暗号化
+  _key = await _initAuth(nw);
+  await save();
   closeModal('changepw-modal');
   notify('パスワードを変更しました');
 }
 
-// ════════ INIT ════════
+// ════════ BOOT ════════
 async function bootApp() {
   await loadState();
   await processAutoRenewals();
-  document.getElementById('sb-lot-name').textContent=lot()?.name||'';
+  document.getElementById('sb-lot-name').textContent = lot()?.name || '';
   updateAlertBadge(); renderDashboard(); updateClock();
-  setInterval(updateClock,30000);
-  setInterval(async()=>{await processAutoRenewals();updateAlertBadge();refresh();},3600000);
+  setInterval(updateClock, 30000);
+  setInterval(async () => { await processAutoRenewals(); updateAlertBadge(); refresh(); }, 3600000);
 }
 
-// On page load: check session
-(async()=>{
-  if (isLoggedIn()) {
-    // Session exists — but we need cryptoKey. Since we can't recover it without
-    // the password after page reload, force re-login for security.
-    // (sessionStorage survives tab refresh but not close — this is intentional)
-    document.getElementById('login-screen').style.display = 'none';
-    // Derive key from stored verifier is not possible without pw; use fallback mode
-    // where contracts are loaded as empty and user must re-login with password
-    // ACTUALLY: sessionStorage persists across refresh (same tab), so for UX
-    // we store the pw-derived key encoded in sessionStorage temporarily
-    const skBuf = sessionStorage.getItem('pms_sk');
-    if (skBuf) {
-      try {
-        const raw = Uint8Array.from(atob(skBuf), c=>c.charCodeAt(0));
-        cryptoKey = await crypto.subtle.importKey('raw', raw, {name:'AES-GCM'}, false, ['encrypt','decrypt']);
-        document.getElementById('login-screen').style.display = 'none';
-        await bootApp();
-        return;
-      } catch(e) { /* fall through to login */ }
+// ════════ INIT ════════
+// DOMContentLoaded後に実行して onclick 参照エラーを防ぐ
+async function _init() {
+  try {
+    // タブリフレッシュ: sessionStorageから鍵を復元
+    if (_isSession()) {
+      const rawB64 = sessionStorage.getItem('pms_raw_key');
+      if (rawB64) {
+        try {
+          _key = await crypto.subtle.importKey('raw', _b64d(rawB64), {name:'AES-GCM'}, true, ['encrypt','decrypt']);
+          document.getElementById('login-screen').style.display = 'none';
+          await bootApp();
+          return;
+        } catch(e) { console.warn('session restore failed:', e); sessionStorage.clear(); }
+      } else {
+        sessionStorage.clear();
+      }
     }
-    // No stored key — show login again
-    sessionStorage.removeItem(SESSION_KEY);
-    document.getElementById('login-screen').style.display = 'flex';
+    // ログイン画面表示
+    document.getElementById('login-hint').textContent = '';
+    const pwEl = document.getElementById('login-pw');
+    if (pwEl) pwEl.focus();
+  } catch(e) {
+    console.error('init error:', e);
+    // エラーがあってもログイン画面は表示する
+    const ls = document.getElementById('login-screen');
+    if (ls) ls.style.display = 'flex';
   }
-  // Show initial password hint on very first visit
-  const isFirst = !localStorage.getItem(PW_META_KEY);
-  if (isFirst) document.getElementById('login-hint').textContent = '初期パスワード: parking2024';
-  document.getElementById('login-pw').focus();
-})();
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _init);
+} else {
+  _init();
+}
 </script>
 </body>
 </html>
