@@ -223,6 +223,58 @@ tr:hover td{background:var(--paper)}
 /* ── Auto-renew box ── */
 .autorenew-box{border:1px solid var(--line);border-radius:3px;padding:.75rem 1rem;margin-bottom:10px;background:var(--paper)}
 .autorenew-box-title{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px}
+
+/* ── Login screen ── */
+.login-screen{position:fixed;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;z-index:9999}
+.login-box{background:var(--surface);border-radius:4px;padding:2rem;width:320px;max-width:92vw}
+.login-brand{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:.375rem}
+.login-title{font-size:18px;font-weight:600;margin-bottom:1.5rem}
+.login-err{background:var(--red-bg);border:1px solid var(--red-line);border-radius:3px;padding:7px 10px;font-size:12px;color:var(--red);margin-bottom:.875rem;display:none}
+.login-err.on{display:block}
+.login-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);font-weight:500;display:block;margin-bottom:4px}
+.login-input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:3px;font-size:14px;outline:none;font-family:inherit;margin-bottom:.875rem}
+.login-input:focus{border-color:var(--ink)}
+.login-btn{width:100%;padding:9px;background:var(--ink);color:#fff;border:none;border-radius:3px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;letter-spacing:.03em}
+.login-btn:hover{opacity:.85}
+.login-hint{font-size:10px;color:var(--ink3);margin-top:.875rem;text-align:center}
+.login-change-wrap{margin-top:.75rem;text-align:center}
+.login-change-link{font-size:11px;color:var(--ink3);cursor:pointer;text-decoration:underline}
+.login-change-link:hover{color:var(--ink)}
+
+/* ── Mobile nav (bottom bar) ── */
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--ink);border-top:1px solid rgba(255,255,255,.12);z-index:50;height:56px}
+.mobile-nav-inner{display:flex;height:100%}
+.mn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:rgba(255,255,255,.45);font-size:9px;letter-spacing:.04em;border:none;background:none;font-family:inherit;position:relative}
+.mn-item.active{color:#fff}
+.mn-dot{width:4px;height:4px;border-radius:50%;background:currentColor}
+.mn-badge{position:absolute;top:6px;right:calc(50% - 14px);background:var(--red);color:#fff;font-size:8px;font-weight:700;padding:0 4px;border-radius:2px;min-width:14px;text-align:center;display:none}
+.mobile-topbar-btn{display:none}
+
+/* ── Mobile settings ── */
+@media (max-width: 640px) {
+  .wrap{flex-direction:column}
+  .side{display:none}
+  .main{height:100dvh}
+  .topbar{padding:.625rem 1rem}
+  .topbar-title{font-size:13px}
+  .mobile-topbar-btn{display:flex;align-items:center;gap:6px}
+  .body{padding:.875rem 1rem;padding-bottom:72px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .fgrid{grid-template-columns:1fr}
+  .fgrid3{grid-template-columns:1fr}
+  .modal{padding:1.125rem;max-height:96dvh}
+  .mobile-nav{display:block}
+  .search-input{width:140px}
+  table{font-size:11px}
+  th,td{padding:6px 8px}
+  .sp-map{max-height:200px}
+  .map-container{max-height:calc(100dvh - 220px)}
+  input[type=text],input[type=tel],input[type=date],input[type=number],input[type=month],select,textarea{font-size:16px;padding:8px 10px}
+  .slot-popup{position:fixed;bottom:64px;left:8px;right:8px;top:auto;max-height:60dvh;overflow-y:auto}
+}
+@media (min-width:641px) {
+  .mobile-nav{display:none}
+}
 </style>
 </head>
 <body>
@@ -253,6 +305,10 @@ tr:hover td{background:var(--paper)}
     <div class="nav-item" id="nav-alerts" onclick="showPage('alerts')"><span class="nav-dot"></span>更新アラート<span class="nav-badge" id="alert-badge" style="display:none">0</span></div>
     <div class="nav-item" id="nav-report" onclick="showPage('report')"><span class="nav-dot"></span>レポート</div>
   </div>
+  <div style="padding:.5rem 1.25rem;border-top:1px solid rgba(255,255,255,.1)">
+    <button onclick="showChangePw();document.getElementById('changepw-modal').classList.add('open')" style="width:100%;padding:4px 0;font-size:10px;background:none;border:none;cursor:pointer;color:rgba(255,255,255,.35);font-family:inherit;margin-bottom:4px;text-align:left">パスワード変更</button>
+    <button onclick="doLogout()" style="width:100%;padding:5px 0;font-size:11px;background:none;border:1px solid rgba(255,255,255,.18);border-radius:3px;cursor:pointer;color:rgba(255,255,255,.5);font-family:inherit">ログアウト</button>
+  </div>
   <div class="side-footer" id="sb-clock"></div>
 </div>
 
@@ -263,6 +319,10 @@ tr:hover td{background:var(--paper)}
 <div id="page-dashboard" class="page active">
   <div class="topbar">
     <div class="topbar-title" id="dash-title">ダッシュボード</div>
+    <div class="topbar-right mobile-topbar-btn">
+      <button class="btn btn-secondary btn-sm" onclick="openLotModal()">切替</button>
+      <button class="btn btn-secondary btn-sm" onclick="doLogout()">ログアウト</button>
+    </div>
   </div>
   <div class="body">
     <div class="stats" id="stat-row">
@@ -525,6 +585,60 @@ tr:hover td{background:var(--paper)}
 <input type="file" id="bg-file" accept="image/*" style="display:none" onchange="onBgChange(event)">
 <div class="notif" id="notif"></div>
 
+<!-- Login screen -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-brand">Parking Mgmt</div>
+    <div class="login-title">駐車場管理システム</div>
+    <div class="login-err" id="login-err">パスワードが正しくありません</div>
+    <label class="login-label" for="login-pw">パスワード</label>
+    <input class="login-input" type="password" id="login-pw" placeholder="パスワードを入力" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">ログイン</button>
+    <div class="login-change-wrap"><span class="login-change-link" onclick="showChangePw()">パスワードを変更する</span></div>
+    <div class="login-hint" id="login-hint"></div>
+  </div>
+</div>
+
+<!-- Change password modal -->
+<div class="modal-bg" id="changepw-modal">
+  <div class="modal" style="width:360px">
+    <div class="modal-hdr">
+      <div class="modal-title">パスワード変更</div>
+      <button class="modal-x" onclick="closeModal('changepw-modal')">×</button>
+    </div>
+    <div class="err-banner" id="cpw-err"></div>
+    <div class="fg"><label>現在のパスワード</label><input type="password" id="cpw-old" placeholder="現在のパスワード"></div>
+    <div class="fg"><label>新しいパスワード</label><input type="password" id="cpw-new" placeholder="8文字以上推奨"></div>
+    <div class="fg"><label>新しいパスワード（確認）</label><input type="password" id="cpw-new2" placeholder="同じパスワードを再入力"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" onclick="doChangePw()">変更する</button>
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('changepw-modal')">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile bottom nav -->
+<nav class="mobile-nav">
+  <div class="mobile-nav-inner">
+    <button class="mn-item active" id="mn-dashboard" onclick="showPage('dashboard')">
+      <span class="mn-dot"></span>ダッシュ
+    </button>
+    <button class="mn-item" id="mn-map" onclick="showPage('map')">
+      <span class="mn-dot"></span>マップ
+    </button>
+    <button class="mn-item" id="mn-contracts" onclick="showPage('contracts')">
+      <span class="mn-dot"></span>契約
+    </button>
+    <button class="mn-item" id="mn-alerts" onclick="showPage('alerts')">
+      <span class="mn-dot"></span>アラート
+      <span class="mn-badge" id="mn-badge" style="display:none">0</span>
+    </button>
+    <button class="mn-item" id="mn-report" onclick="showPage('report')">
+      <span class="mn-dot"></span>レポート
+    </button>
+  </div>
+</nav>
+
 <script>
 // ════════ STATE ════════
 const SK = 'pms_v4';
@@ -616,8 +730,16 @@ function processAutoRenewals(){
 function getAlerts(){ return lotContracts().filter(c=>{const mu=monthsUntil(c.end);return mu>=0&&mu<=3;}); }
 function getManualAlerts(){ return getAlerts().filter(c=>!c.autoRenew); }
 function updateAlertBadge(){
-  const n=getManualAlerts().length, b=document.getElementById('alert-badge');
-  if(n>0){b.textContent=n;b.style.display='inline-block';} else b.style.display='none';
+  const n=getManualAlerts().length;
+  const b=document.getElementById('alert-badge');
+  const mb=document.getElementById('mn-badge');
+  if(n>0){
+    b.textContent=n; b.style.display='inline-block';
+    if(mb){mb.textContent=n;mb.style.display='inline-block';}
+  } else {
+    b.style.display='none';
+    if(mb) mb.style.display='none';
+  }
 }
 function datesOverlap(s1,e1,s2,e2){ return !(s1>e2||e1<s2); }
 function checkOverlap(slot,start,end,excludeId=null){
@@ -632,8 +754,10 @@ function updateClock(){
 function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.mn-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   document.getElementById('nav-'+name).classList.add('active');
+  const mnEl=document.getElementById('mn-'+name); if(mnEl)mnEl.classList.add('active');
   curPage=name; closePopup();
   if(name==='dashboard') renderDashboard();
   else if(name==='map') renderMap();
@@ -1152,13 +1276,86 @@ function closeModal(id){ document.getElementById(id).classList.remove('open'); }
   document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 });
 
+// ════════ AUTH ════════
+const PW_KEY = 'pms_pw_hash';
+const SESSION_KEY = 'pms_session';
+const DEFAULT_PW = 'parking2024';
+
+function hashPw(pw) {
+  // Simple deterministic hash (not cryptographic, but sufficient for local-only use)
+  let h = 0x811c9dc5;
+  for (let i = 0; i < pw.length; i++) {
+    h ^= pw.charCodeAt(i);
+    h = (h * 0x01000193) >>> 0;
+  }
+  return h.toString(16);
+}
+function getStoredHash() {
+  return localStorage.getItem(PW_KEY) || hashPw(DEFAULT_PW);
+}
+function isLoggedIn() {
+  return sessionStorage.getItem(SESSION_KEY) === '1';
+}
+function doLogin() {
+  const pw = document.getElementById('login-pw').value;
+  if (!pw) return;
+  if (hashPw(pw) === getStoredHash()) {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('login-pw').value = '';
+    document.getElementById('login-err').classList.remove('on');
+    bootApp();
+  } else {
+    document.getElementById('login-err').classList.add('on');
+    document.getElementById('login-pw').value = '';
+    document.getElementById('login-pw').focus();
+  }
+}
+function doLogout() {
+  if (!confirm('ログアウトしますか？')) return;
+  sessionStorage.removeItem(SESSION_KEY);
+  location.reload();
+}
+function showChangePw() {
+  // From login screen — requires knowing current pw, so just open modal
+  ['cpw-old','cpw-new','cpw-new2'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('cpw-err').classList.remove('on');
+  document.getElementById('changepw-modal').classList.add('open');
+}
+function doChangePw() {
+  const old = document.getElementById('cpw-old').value;
+  const nw  = document.getElementById('cpw-new').value;
+  const nw2 = document.getElementById('cpw-new2').value;
+  const eb  = document.getElementById('cpw-err');
+  eb.classList.remove('on');
+  if (hashPw(old) !== getStoredHash()) { eb.textContent = '現在のパスワードが正しくありません'; eb.classList.add('on'); return; }
+  if (nw.length < 4) { eb.textContent = '新しいパスワードは4文字以上にしてください'; eb.classList.add('on'); return; }
+  if (nw !== nw2) { eb.textContent = '新しいパスワードが一致しません'; eb.classList.add('on'); return; }
+  localStorage.setItem(PW_KEY, hashPw(nw));
+  closeModal('changepw-modal');
+  notify('パスワードを変更しました');
+}
+
 // ════════ INIT ════════
-loadState();
-processAutoRenewals();
-document.getElementById('sb-lot-name').textContent=lot()?.name||'';
-updateAlertBadge(); renderDashboard(); updateClock();
-setInterval(updateClock,30000);
-setInterval(()=>{processAutoRenewals();updateAlertBadge();refresh();},3600000);
+function bootApp() {
+  loadState();
+  processAutoRenewals();
+  document.getElementById('sb-lot-name').textContent=lot()?.name||'';
+  updateAlertBadge(); renderDashboard(); updateClock();
+  setInterval(updateClock,30000);
+  setInterval(()=>{processAutoRenewals();updateAlertBadge();refresh();},3600000);
+}
+
+// Check session on load
+if (isLoggedIn()) {
+  document.getElementById('login-screen').style.display = 'none';
+  bootApp();
+} else {
+  // Show default pw hint on first visit
+  const isFirst = !localStorage.getItem(PW_KEY);
+  if (isFirst) document.getElementById('login-hint').textContent = '初期パスワード: parking2024';
+  document.getElementById('login-pw').focus();
+}
 </script>
 </body>
 </html>
