@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>駐車場管理</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1c1c1c;--ink2:#555;--ink3:#999;
+  --paper:#f8f7f4;--surface:#fff;
+  --line:#d8d5ce;--line-l:#eae8e2;
+  --green:#1a6640;--green-bg:#edf5f0;--green-line:#a8cdb8;
+  --red:#9b2020;--red-bg:#fdf0f0;--red-line:#dba5a5;
+  --amber:#7a5200;--amber-bg:#fdf6e8;--amber-line:#d9b96a;
+  --blue:#1a3d6b;--blue-bg:#edf2f9;--blue-line:#91aed0;
+}
+html,body{height:100%}
+body{font-family:'IBM Plex Sans JP',sans-serif;background:var(--paper);color:var(--ink);font-size:13px;line-height:1.5}
+
+/* ── Layout ── */
+.wrap{display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+.side{width:200px;background:var(--ink);flex-shrink:0;display:flex;flex-direction:column;overflow:hidden}
+.side-hdr{padding:1.25rem 1.25rem 1rem;border-bottom:1px solid rgba(255,255,255,.1)}
+.side-brand{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:.25rem}
+.side-title{font-size:14px;font-weight:600;color:#fff}
+.side-lot{padding:.875rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.1)}
+.side-lot-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:4px}
+.side-lot-name{font-size:12px;font-weight:500;color:rgba(255,255,255,.85);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.side-lot-name:hover{color:#fff}
+.side-rename-wrap{display:none;margin-bottom:6px}
+.side-rename-input{width:100%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:3px;padding:4px 7px;font-size:12px;color:#fff;outline:none;font-family:inherit}
+.side-rename-input:focus{border-color:rgba(255,255,255,.5)}
+.side-rename-btns{display:flex;gap:4px;margin-top:4px}
+.side-rename-btns button{flex:1;padding:3px 0;font-size:10px;border:1px solid rgba(255,255,255,.25);border-radius:3px;cursor:pointer;font-family:inherit}
+.side-rename-btns .sb-ok{background:rgba(255,255,255,.15);color:#fff}
+.side-rename-btns .sb-cancel{background:none;color:rgba(255,255,255,.5)}
+.side-switch{width:100%;padding:5px 0;font-size:11px;background:none;border:1px solid rgba(255,255,255,.2);border-radius:3px;cursor:pointer;color:rgba(255,255,255,.55);font-family:inherit;letter-spacing:.03em}
+.side-switch:hover{border-color:rgba(255,255,255,.4);color:rgba(255,255,255,.8)}
+.side-nav{padding:.5rem 0;flex:1}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 1.25rem;cursor:pointer;color:rgba(255,255,255,.5);font-size:12px;border-left:2px solid transparent;transition:color .1s}
+.nav-item:hover{color:rgba(255,255,255,.8)}
+.nav-item.active{color:#fff;border-left-color:#fff;background:rgba(255,255,255,.06)}
+.nav-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:9px;font-weight:600;padding:1px 5px;border-radius:2px;font-family:'IBM Plex Mono',monospace}
+.side-footer{padding:.75rem 1.25rem;border-top:1px solid rgba(255,255,255,.1);font-size:10px;color:rgba(255,255,255,.3);font-family:'IBM Plex Mono',monospace}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1.5rem;border-bottom:1px solid var(--line);background:var(--surface);flex-shrink:0}
+.topbar-title{font-size:14px;font-weight:600;letter-spacing:.01em}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.body{flex:1;overflow-y:auto;padding:1.25rem 1.5rem}
+
+/* ── Stats ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-bottom:1.25rem;background:var(--line)}
+.stat{background:var(--surface);padding:.875rem 1rem}
+.stat-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:5px}
+.stat-val{font-size:22px;font-weight:600;font-family:'IBM Plex Mono',monospace;letter-spacing:-.01em}
+.stat-sub{font-size:10px;color:var(--ink3);margin-top:2px}
+.c-green{color:var(--green)} .c-red{color:var(--red)} .c-blue{color:var(--blue)}
+
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:4px;margin-bottom:1rem}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border-bottom:1px solid var(--line-l)}
+.card-title{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink2)}
+.card-body{padding:1rem}
+.card-body.no-pad{padding:0}
+
+/* ── Notice banners ── */
+.notice{border:1px solid var(--line);border-radius:3px;padding:.625rem .875rem;margin-bottom:.75rem;font-size:12px;display:flex;align-items:flex-start;gap:.5rem}
+.notice.warn{background:var(--red-bg);border-color:var(--red-line);color:var(--red)}
+.notice.info{background:var(--blue-bg);border-color:var(--blue-line);color:var(--blue)}
+.notice-mark{font-size:10px;font-weight:700;padding:1px 5px;border:1px solid currentColor;border-radius:2px;flex-shrink:0;margin-top:1px;font-family:'IBM Plex Mono',monospace}
+
+/* ── Buttons ── */
+.btn{padding:6px 14px;border-radius:3px;font-size:12px;cursor:pointer;font-weight:500;border:1px solid transparent;transition:opacity .1s;font-family:inherit;letter-spacing:.02em}
+.btn:hover{opacity:.82}
+.btn-primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn-secondary{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.btn-danger{background:var(--red-bg);color:var(--red);border-color:var(--red-line)}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn-xs{padding:3px 8px;font-size:10px}
+.btn-row{display:flex;gap:6px;margin-top:.75rem;flex-wrap:wrap}
+
+/* ── Forms ── */
+.fg{display:flex;flex-direction:column;gap:3px;margin-bottom:10px}
+.fg label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);font-weight:500}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fgrid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+input[type=text],input[type=tel],input[type=date],input[type=number],input[type=month],select,textarea{width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:3px;font-size:12px;background:var(--surface);color:var(--ink);outline:none;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:var(--ink)}
+textarea{resize:vertical;min-height:56px}
+.ferr{font-size:10px;color:var(--red);margin-top:2px;display:none}
+.ferr.on{display:block}
+.err-banner{background:var(--red-bg);border:1px solid var(--red-line);border-radius:3px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--red);display:none}
+.err-banner.on{display:block}
+
+/* ── Tables ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;font-weight:500;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--paper)}
+td{padding:8px 10px;border-bottom:1px solid var(--line-l);vertical-align:middle;color:var(--ink)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--paper)}
+.mono{font-family:'IBM Plex Mono',monospace;font-size:11px}
+
+/* ── Badges ── */
+.badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:2px;font-weight:500;font-family:'IBM Plex Mono',monospace;border:1px solid}
+.badge-green{background:var(--green-bg);color:var(--green);border-color:var(--green-line)}
+.badge-red{background:var(--red-bg);color:var(--red);border-color:var(--red-line)}
+.badge-amber{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-line)}
+.badge-blue{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-line)}
+.badge-gray{background:var(--paper);color:var(--ink2);border-color:var(--line)}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:1rem}
+.tab{font-size:11px;padding:7px 14px;cursor:pointer;color:var(--ink3);border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;font-family:inherit;letter-spacing:.03em}
+.tab.active{color:var(--ink);font-weight:600;border-bottom-color:var(--ink)}
+
+/* ── Modal ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border-radius:4px;border:1px solid var(--line);padding:1.5rem;width:580px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.12)}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid var(--line-l)}
+.modal-title{font-size:14px;font-weight:600}
+.modal-x{background:none;border:none;font-size:16px;cursor:pointer;color:var(--ink3);padding:2px 6px;line-height:1;font-family:inherit}
+.modal-x:hover{color:var(--ink)}
+
+/* ── Tags ── */
+.tag-wrap{display:flex;flex-wrap:wrap;gap:4px;padding:5px 7px;border:1px solid var(--line);border-radius:3px;min-height:34px;cursor:text;background:var(--surface)}
+.tag-wrap:focus-within{border-color:var(--ink)}
+.tag{display:inline-flex;align-items:center;gap:3px;background:var(--paper);border:1px solid var(--line);border-radius:2px;padding:2px 7px;font-size:11px;font-family:'IBM Plex Mono',monospace}
+.tag-x{cursor:pointer;color:var(--ink3);font-size:12px;line-height:1;margin-left:2px}
+.tag-x:hover{color:var(--red)}
+.tag-in{border:none;outline:none;font-size:12px;min-width:80px;background:transparent;color:var(--ink);font-family:inherit}
+
+/* ── Map overlay ── */
+.map-container{position:relative;overflow:auto;border:1px solid var(--line);border-radius:4px;background:#ddd;min-height:280px}
+.map-ph{width:100%;min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;color:var(--ink3);font-size:12px;border:2px dashed var(--line);border-radius:3px;background:var(--paper)}
+.map-ph:hover{border-color:var(--ink2);color:var(--ink2)}
+.map-ph-icon{width:40px;height:40px;opacity:.3}
+.map-bg{display:block;pointer-events:none}
+.slot-ov{position:absolute;cursor:pointer;border:1.5px solid rgba(255,255,255,.6);border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;user-select:none}
+.slot-ov.e{background:rgba(26,102,64,.78)}
+.slot-ov.o{background:rgba(155,32,32,.82)}
+.slot-ov.a{background:rgba(122,82,0,.75)}
+.slot-ov:not(.o):hover{filter:brightness(1.1)}
+.slot-ov.sel{outline:2px solid #fff;z-index:3}
+.ov-id{font-size:9px;font-weight:600;color:#fff;line-height:1.3;text-shadow:0 1px 2px rgba(0,0,0,.4);font-family:'IBM Plex Mono',monospace}
+.ov-nm{font-size:8px;color:rgba(255,255,255,.88);text-shadow:0 1px 2px rgba(0,0,0,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:92%}
+.ov-drag-hint{position:absolute;bottom:2px;right:3px;font-size:7px;color:rgba(255,255,255,.5)}
+.edit-bar{background:var(--amber-bg);border:1px solid var(--amber-line);border-radius:3px;padding:.625rem 1rem;margin-bottom:.75rem;display:none;align-items:center;gap:8px;flex-wrap:wrap}
+.edit-bar-label{font-size:11px;font-weight:600;color:var(--amber);flex:1;letter-spacing:.03em}
+
+/* ── Slot popup ── */
+.slot-popup{position:fixed;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:.875rem 1rem;z-index:100;min-width:210px;box-shadow:0 4px 16px rgba(0,0,0,.1);display:none}
+.slot-popup.on{display:block}
+.pp-title{font-size:12px;font-weight:600;margin-bottom:.625rem;padding-bottom:.5rem;border-bottom:1px solid var(--line-l);font-family:'IBM Plex Mono',monospace}
+.pp-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--line-l);gap:8px}
+.pp-row:last-child{border-bottom:none}
+.pp-key{color:var(--ink3);flex-shrink:0}
+.pp-val{color:var(--ink);text-align:right}
+.pp-btns{display:flex;gap:5px;margin-top:.625rem;padding-top:.5rem;border-top:1px solid var(--line-l)}
+
+/* ── Slot picker in modal ── */
+.sp-map{border:1px solid var(--line);border-radius:3px;overflow:auto;background:#ccc;min-height:150px;position:relative;cursor:crosshair}
+.sp-map-inner{position:relative;display:inline-block;min-width:100%}
+.sp-map-inner img{display:block;max-width:100%;pointer-events:none}
+.sp-ov{position:absolute;cursor:pointer;border:1.5px solid rgba(255,255,255,.55);border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.sp-ov.e{background:rgba(26,102,64,.78)}
+.sp-ov.o{background:rgba(155,32,32,.75);cursor:not-allowed;opacity:.7}
+.sp-ov.self{background:rgba(122,82,0,.8)}
+.sp-ov:not(.o):hover{filter:brightness(1.12)}
+.sp-ov.picked{outline:2.5px solid var(--ink);outline-offset:1px;z-index:3}
+.sp-ov-id{font-size:9px;font-weight:600;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4);font-family:'IBM Plex Mono',monospace}
+.sp-ov-nm{font-size:7px;color:rgba(255,255,255,.85);text-shadow:0 1px 2px rgba(0,0,0,.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:92%}
+.slot-disp{padding:6px 9px;border:1px solid var(--line);border-radius:3px;font-size:12px;min-height:34px;display:flex;align-items:center;gap:8px;background:var(--paper)}
+.slot-disp .sv{font-weight:600;font-family:'IBM Plex Mono',monospace}
+.slot-disp .sh{font-size:11px;color:var(--ink3)}
+
+/* ── Lot modal cards ── */
+.lot-card{border:1px solid var(--line);border-radius:3px;padding:.75rem 1rem;margin-bottom:6px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.lot-card.cur{border-color:var(--ink)}
+.lot-name-row{display:flex;align-items:center;gap:5px;margin-bottom:2px}
+.lot-card-name{font-size:13px;font-weight:600}
+.lot-card-meta{font-size:11px;color:var(--ink3)}
+.lot-rename-form{display:none;align-items:center;gap:5px;margin-bottom:4px}
+.lot-rename-input{flex:1;padding:4px 7px;font-size:12px;border:1px solid var(--line);border-radius:3px;outline:none;font-family:inherit}
+.lot-rename-input:focus{border-color:var(--ink)}
+
+/* ── Status label ── */
+.status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;flex-shrink:0}
+.dot-green{background:var(--green)} .dot-red{background:var(--red)} .dot-amber{background:var(--amber)}
+
+/* ── Legend ── */
+.legend{display:flex;gap:14px;font-size:11px;color:var(--ink3);margin-bottom:.75rem}
+.leg{display:flex;align-items:center;gap:5px}
+.leg-sq{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* ── Dashboard mini grid ── */
+.mini-grid{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:.5rem}
+.mg-slot{border-radius:2px;padding:3px 4px;font-size:8px;font-family:'IBM Plex Mono',monospace;cursor:pointer;border:1px solid transparent;min-width:38px;text-align:center}
+.mg-slot.e{background:var(--green-bg);border-color:var(--green-line);color:var(--green)}
+.mg-slot.o{background:var(--red-bg);border-color:var(--red-line);color:var(--red)}
+
+/* ── Pages ── */
+.page{display:none}.page.active{display:block}
+.empty{text-align:center;color:var(--ink3);padding:2rem;font-size:12px}
+
+/* ── Notification strip ── */
+.notif{position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;padding:8px 16px;border-radius:3px;font-size:12px;opacity:0;transition:opacity .15s;pointer-events:none;z-index:999;font-family:'IBM Plex Mono',monospace}
+.notif.on{opacity:1}
+
+/* ── Search ── */
+.search-input{padding:6px 10px;border:1px solid var(--line);border-radius:3px;font-size:12px;width:200px;background:var(--surface);color:var(--ink);outline:none;font-family:inherit}
+.search-input:focus{border-color:var(--ink)}
+
+/* ── Auto-renew box ── */
+.autorenew-box{border:1px solid var(--line);border-radius:3px;padding:.75rem 1rem;margin-bottom:10px;background:var(--paper)}
+.autorenew-box-title{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- Sidebar -->
+<div class="side">
+  <div class="side-hdr">
+    <div class="side-brand">Parking Mgmt</div>
+    <div class="side-title">駐車場管理</div>
+  </div>
+  <div class="side-lot">
+    <div class="side-lot-label">現在の駐車場</div>
+    <div class="side-lot-name" id="sb-lot-name" onclick="startSbRename()" title="クリックで名前を変更"></div>
+    <div class="side-rename-wrap" id="sb-rename-wrap">
+      <input class="side-rename-input" id="sb-rename-in" onkeydown="sbRenameKey(event)">
+      <div class="side-rename-btns">
+        <button class="sb-ok" onclick="confirmSbRename()">保存</button>
+        <button class="sb-cancel" onclick="cancelSbRename()">取消</button>
+      </div>
+    </div>
+    <button class="side-switch" onclick="openLotModal()">駐車場を切り替え</button>
+  </div>
+  <div class="side-nav">
+    <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')"><span class="nav-dot"></span>ダッシュボード</div>
+    <div class="nav-item" id="nav-map" onclick="showPage('map')"><span class="nav-dot"></span>区画マップ</div>
+    <div class="nav-item" id="nav-contracts" onclick="showPage('contracts')"><span class="nav-dot"></span>月極契約</div>
+    <div class="nav-item" id="nav-alerts" onclick="showPage('alerts')"><span class="nav-dot"></span>更新アラート<span class="nav-badge" id="alert-badge" style="display:none">0</span></div>
+    <div class="nav-item" id="nav-report" onclick="showPage('report')"><span class="nav-dot"></span>レポート</div>
+  </div>
+  <div class="side-footer" id="sb-clock"></div>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page active">
+  <div class="topbar">
+    <div class="topbar-title" id="dash-title">ダッシュボード</div>
+  </div>
+  <div class="body">
+    <div class="stats" id="stat-row">
+      <div class="stat"><div class="stat-label">総区画数</div><div class="stat-val" id="s-total">—</div><div class="stat-sub">管理区画</div></div>
+      <div class="stat"><div class="stat-label">空き</div><div class="stat-val c-green" id="s-empty">—</div><div class="stat-sub">利用可能</div></div>
+      <div class="stat"><div class="stat-label">契約中</div><div class="stat-val c-red" id="s-occ">—</div><div class="stat-sub">有効契約</div></div>
+      <div class="stat"><div class="stat-label">月次収入</div><div class="stat-val c-blue" id="s-income">—</div><div class="stat-sub">稼働中合計</div></div>
+    </div>
+    <div id="dash-notices"></div>
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">区画状況</div>
+        <span class="badge badge-gray" id="dash-lot-badge"></span>
+      </div>
+      <div class="card-body">
+        <div class="legend">
+          <div class="leg"><div class="leg-sq" style="background:var(--green-bg);border:1px solid var(--green-line)"></div>空き</div>
+          <div class="leg"><div class="leg-sq" style="background:var(--red-bg);border:1px solid var(--red-line)"></div>契約中</div>
+        </div>
+        <div class="mini-grid" id="dash-grid"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">更新予定 — 3ヶ月以内</div></div>
+      <div class="card-body no-pad">
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>区画</th><th>契約者</th><th>更新日</th><th>月額</th><th>支払い</th></tr></thead>
+          <tbody id="dash-renew"></tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAP -->
+<div id="page-map" class="page">
+  <div class="topbar">
+    <div class="topbar-title">区画マップ</div>
+    <div class="topbar-right">
+      <button class="btn btn-secondary btn-sm" id="edit-btn" onclick="toggleEdit()">レイアウト編集</button>
+      <button class="btn btn-secondary btn-sm" onclick="openAddSlot()">区画追加</button>
+    </div>
+  </div>
+  <div class="body">
+    <div class="edit-bar" id="edit-bar">
+      <span class="edit-bar-label">編集モード — 区画をドラッグして移動 / 右下角でリサイズ</span>
+      <button class="btn btn-secondary btn-sm" onclick="uploadBg()">背景画像を変更</button>
+      <button class="btn btn-primary btn-sm" onclick="toggleEdit()">完了</button>
+    </div>
+    <div class="card" style="padding:.75rem">
+      <div class="legend">
+        <div class="leg"><div class="leg-sq" style="background:rgba(26,102,64,.78)"></div>空き</div>
+        <div class="leg"><div class="leg-sq" style="background:rgba(155,32,32,.82)"></div>契約中</div>
+        <div class="leg"><div class="leg-sq" style="background:rgba(122,82,0,.75)"></div>期限切れ</div>
+      </div>
+      <div class="map-container" id="map-container">
+        <div class="map-ph" id="map-ph" onclick="uploadBg()">
+          <svg class="map-ph-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="3" width="20" height="18" rx="1"/><path d="M2 8h20M8 21V8"/><path d="M14 13h4M14 16h3"/></svg>
+          <span>背景画像をクリックしてアップロード（JPG / PNG）</span>
+        </div>
+        <img id="map-bg" style="display:none;pointer-events:none;display:block;max-width:100%" alt="">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTRACTS -->
+<div id="page-contracts" class="page">
+  <div class="topbar">
+    <div class="topbar-title">月極契約</div>
+    <div class="topbar-right">
+      <input class="search-input" type="text" placeholder="名前・車番で検索" id="c-search" oninput="renderContracts()">
+      <button class="btn btn-primary btn-sm" onclick="openContractModal()">新規契約</button>
+    </div>
+  </div>
+  <div class="body">
+    <div class="tabs">
+      <button class="tab active" onclick="filterStatus('all',this)">すべて</button>
+      <button class="tab" onclick="filterStatus('active',this)">契約中</button>
+      <button class="tab" onclick="filterStatus('expired',this)">期限切れ</button>
+    </div>
+    <div class="card">
+      <div class="card-body no-pad">
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>区画</th><th>契約者名</th><th>連絡先</th><th>車両番号</th><th>契約期間</th><th>月額</th><th>支払い</th><th>操作</th></tr></thead>
+          <tbody id="contract-body"></tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ALERTS -->
+<div id="page-alerts" class="page">
+  <div class="topbar"><div class="topbar-title">更新アラート</div></div>
+  <div class="body" id="alert-content"></div>
+</div>
+
+<!-- REPORT -->
+<div id="page-report" class="page">
+  <div class="topbar"><div class="topbar-title">月次レポート</div></div>
+  <div class="body">
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">CSVエクスポート</div></div>
+      <div class="card-body">
+        <div class="fgrid" style="max-width:400px">
+          <div class="fg"><label>対象年月</label><input type="month" id="rep-month"></div>
+          <div class="fg"><label>出力内容</label>
+            <select id="rep-type">
+              <option value="contracts">月極契約一覧</option>
+              <option value="unpaid">未払い一覧</option>
+              <option value="renew">更新予定一覧</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary btn-sm" onclick="exportCSV()">CSVダウンロード</button>
+          <button class="btn btn-secondary btn-sm" onclick="previewReport()">プレビュー</button>
+        </div>
+      </div>
+    </div>
+    <div class="card" id="rep-preview" style="display:none">
+      <div class="card-hdr"><div class="card-title" id="rep-preview-title"></div></div>
+      <div class="card-body no-pad">
+        <div class="tbl-wrap"><table><thead id="rep-thead"></thead><tbody id="rep-tbody"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /wrap -->
+
+<!-- Lot modal -->
+<div class="modal-bg" id="lot-modal">
+  <div class="modal" style="width:460px">
+    <div class="modal-hdr">
+      <div class="modal-title">駐車場を選択 / 管理</div>
+      <button class="modal-x" onclick="closeLotModal()">×</button>
+    </div>
+    <div id="lot-list"></div>
+    <div class="btn-row" style="margin-top:1rem">
+      <button class="btn btn-primary btn-sm" onclick="toggleNewLotForm()">新規駐車場を追加</button>
+    </div>
+    <div id="new-lot-form" style="display:none;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--line-l)">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:.75rem">新規駐車場</div>
+      <div class="fgrid"><div class="fg"><label>駐車場名</label><input type="text" id="nl-name" placeholder="例: 本社第一駐車場"></div>
+      <div class="fg"><label>住所</label><input type="text" id="nl-addr" placeholder="例: 名古屋市中区..."></div></div>
+      <div class="fgrid"><div class="fg"><label>行数</label><input type="number" id="nl-rows" value="4" min="1" max="20"></div>
+      <div class="fg"><label>列数</label><input type="number" id="nl-cols" value="10" min="1" max="20"></div></div>
+      <div class="btn-row">
+        <button class="btn btn-primary btn-xs" onclick="createLot()">作成</button>
+        <button class="btn btn-secondary btn-xs" onclick="toggleNewLotForm()">取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Contract modal -->
+<div class="modal-bg" id="contract-modal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title" id="cm-title">新規月極契約</div>
+      <button class="modal-x" onclick="closeContractModal()">×</button>
+    </div>
+    <div class="err-banner" id="cm-err"></div>
+    <div class="fg">
+      <label>区画を選択</label>
+      <div class="slot-disp"><span class="sv" id="cm-slot-val">—</span><span class="sh" id="cm-slot-hint">下のマップから区画をクリックしてください</span></div>
+      <div class="ferr" id="cm-slot-err">区画を選択してください</div>
+      <div style="font-size:10px;color:var(--ink3);margin:5px 0 4px;display:flex;gap:12px">
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:1px;background:rgba(26,102,64,.78);vertical-align:middle;margin-right:3px"></span>空き</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:1px;background:rgba(155,32,32,.75);vertical-align:middle;margin-right:3px"></span>契約中（選択不可）</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:1px;background:rgba(122,82,0,.8);vertical-align:middle;margin-right:3px"></span>編集中</span>
+      </div>
+      <div class="sp-map" id="cm-map">
+        <div class="sp-map-inner" id="cm-map-inner">
+          <div style="display:flex;align-items:center;justify-content:center;min-height:150px;font-size:11px;color:var(--ink3)">区画データなし</div>
+        </div>
+      </div>
+    </div>
+    <div class="fgrid">
+      <div class="fg"><label>契約者名 *</label><input type="text" id="cm-name" placeholder="山田 太郎"></div>
+      <div class="fg"><label>電話番号</label><input type="tel" id="cm-tel" placeholder="090-0000-0000"></div>
+    </div>
+    <div class="fg"><label>メールアドレス</label><input type="text" id="cm-email" placeholder="例: yamada@example.com"></div>
+    <div class="fg">
+      <label>車両番号（複数可 — Enterで追加）</label>
+      <div class="tag-wrap" id="cm-plates" onclick="document.getElementById('cm-plate-in').focus()">
+        <input class="tag-in" id="cm-plate-in" placeholder="例: 名古屋 300 あ 1234" onkeydown="addPlate(event)">
+      </div>
+    </div>
+    <div class="fgrid">
+      <div class="fg"><label>契約開始日 *</label><input type="date" id="cm-start"></div>
+      <div class="fg"><label>契約終了日 *</label><input type="date" id="cm-end"></div>
+    </div>
+    <div class="fgrid">
+      <div class="fg"><label>月額料金（円）*</label><input type="number" id="cm-fee" placeholder="15000"></div>
+      <div class="fg"><label>支払い状況</label>
+        <select id="cm-paid">
+          <option value="paid">支払い済み</option>
+          <option value="unpaid">未払い</option>
+          <option value="partial">一部支払い</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label>備考</label><textarea id="cm-note" rows="2" placeholder="任意"></textarea></div>
+    <div class="autorenew-box">
+      <div class="autorenew-box-title">自動更新設定</div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;margin-bottom:8px">
+        <input type="checkbox" id="cm-autorenew" onchange="toggleAutoRenewUI()" style="width:auto;accent-color:var(--ink)">
+        自動更新を有効にする
+      </label>
+      <div id="cm-ar-opts" style="display:none">
+        <div class="fgrid">
+          <div class="fg" style="margin-bottom:0"><label>更新サイクル</label>
+            <select id="cm-renew-months">
+              <option value="1">1ヶ月</option><option value="3">3ヶ月</option>
+              <option value="6">6ヶ月</option><option value="12" selected>12ヶ月</option>
+              <option value="24">24ヶ月</option>
+            </select>
+          </div>
+          <div class="fg" style="margin-bottom:0"><label>更新時の支払い</label>
+            <select id="cm-renew-paid">
+              <option value="unpaid">未払いにリセット</option>
+              <option value="paid">支払い済みのまま</option>
+            </select>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--ink3);margin-top:6px">契約終了日を過ぎると自動的に次の期間へ延長されます</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" onclick="saveContract()">保存</button>
+      <button class="btn btn-secondary btn-sm" onclick="closeContractModal()">取消</button>
+      <button class="btn btn-danger btn-sm" id="cm-del" style="display:none;margin-left:auto" onclick="deleteContract()">削除</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add slot modal -->
+<div class="modal-bg" id="add-slot-modal">
+  <div class="modal" style="width:340px">
+    <div class="modal-hdr"><div class="modal-title">区画を追加</div><button class="modal-x" onclick="closeModal('add-slot-modal')">×</button></div>
+    <div class="fg"><label>区画番号</label><input type="text" id="as-id" placeholder="例: F-01"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-xs" onclick="addSlot()">追加</button>
+      <button class="btn btn-secondary btn-xs" onclick="closeModal('add-slot-modal')">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- Slot popup -->
+<div class="slot-popup" id="slot-popup">
+  <div class="pp-title" id="pp-title"></div>
+  <div id="pp-rows"></div>
+  <div class="pp-btns" id="pp-btns"></div>
+</div>
+
+<input type="file" id="bg-file" accept="image/*" style="display:none" onchange="onBgChange(event)">
+<div class="notif" id="notif"></div>
+
+<script>
+// ════════ STATE ════════
+const SK = 'pms_v4';
+let state = { lots:{}, contracts:[], nextLotId:1, nextContractId:1 };
+let curLotId = null, curPage = 'dashboard', statusFilter = 'all';
+let editMode = false, pickedSlot = '', editingId = null, curPlates = [];
+
+function loadState() {
+  try {
+    const s = localStorage.getItem(SK);
+    if (s) state = JSON.parse(s);
+    else initDemo();
+    const ids = Object.keys(state.lots);
+    if (ids.length) curLotId = ids[0];
+  } catch(e) { initDemo(); }
+}
+function save() { localStorage.setItem(SK, JSON.stringify(state)); }
+function lot() { return state.lots[curLotId] || null; }
+function lotContracts() { return state.contracts.filter(c => c.lotId === curLotId); }
+function today() { return new Date().toISOString().slice(0,10); }
+function activeContract(slotId) {
+  const t = today();
+  return lotContracts().find(c => c.slot === slotId && c.start <= t && c.end >= t);
+}
+
+// ════════ DEMO ════════
+function mkLot(name, addr, rows, cols) {
+  const id = String(state.nextLotId++);
+  const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const slots = {}, cW=780, cH=400, mg=10, gx=4, gy=4;
+  const sw = Math.floor((cW-mg*2-gx*(cols-1))/cols);
+  const sh = Math.floor((cH-mg*2-gy*(rows-1))/rows);
+  for (let r=0;r<rows;r++) for (let c=1;c<=cols;c++) {
+    const sid=`${ALPHA[r]}-${String(c).padStart(2,'0')}`;
+    slots[sid]={id:sid,status:'empty',x:mg+(c-1)*(sw+gx),y:mg+r*(sh+gy),w:sw,h:sh};
+  }
+  return {id,name,addr,bgImg:null,containerW:cW,containerH:cH,slots};
+}
+function initDemo() {
+  const now=new Date(), y=now.getFullYear(), m=now.getMonth();
+  const dt=(yr,mo,d)=>new Date(yr,mo,d).toISOString().slice(0,10);
+  const l1=mkLot('本社第一駐車場','名古屋市中区栄1-1',4,10); state.lots[l1.id]=l1;
+  [
+    {slot:'A-01',name:'山田 太郎',tel:'052-111-2222',email:'yamada@example.com',plates:['名古屋 300 あ 1234'],start:dt(y-1,0,1),end:dt(y,m+1,31),fee:15000,paid:'paid'},
+    {slot:'A-02',name:'鈴木 花子',tel:'090-3333-4444',email:'',plates:['愛知 501 い 8832','愛知 502 い 9999'],start:dt(y-1,3,1),end:dt(y,m,28),fee:12000,paid:'unpaid'},
+    {slot:'B-03',name:'田中 一郎',tel:'',email:'tanaka@co.jp',plates:['三河 100 う 0011'],start:dt(y,m-5,1),end:dt(y,m+2,28),fee:13000,paid:'paid'},
+    {slot:'B-05',name:'伊藤 次郎',tel:'080-5555-6666',email:'',plates:['名古屋 800 え 5500'],start:dt(y-2,6,1),end:dt(y,m,31),fee:14000,paid:'partial'},
+    {slot:'C-04',name:'渡辺 三郎',tel:'052-777-8888',email:'',plates:['岐阜 200 お 3210'],start:dt(y,m-2,1),end:dt(y,m+4,30),fee:11000,paid:'paid'},
+    {slot:'D-07',name:'小林 四郎',tel:'',email:'kobayashi@example.com',plates:['三重 400 か 7777'],start:dt(y-1,9,1),end:dt(y,m+1,28),fee:16000,paid:'paid'},
+  ].forEach(d=>{
+    state.contracts.push({...d,id:state.nextContractId++,lotId:l1.id,note:'',autoRenew:false,renewMonths:12,renewPaid:'unpaid'});
+    if(l1.slots[d.slot]) l1.slots[d.slot].status='occupied';
+  });
+  const l2=mkLot('南館駐車場','名古屋市中区栄1-2',3,8); state.lots[l2.id]=l2;
+  [{slot:'A-01',name:'加藤 五郎',tel:'090-9999-0000',email:'',plates:['名古屋 100 き 2222'],start:dt(y,m-1,1),end:dt(y,m+2,31),fee:12500,paid:'paid'},
+   {slot:'B-02',name:'松本 六郎',tel:'052-222-3333',email:'',plates:['愛知 300 く 4444'],start:dt(y,m-3,1),end:dt(y,m+1,28),fee:11000,paid:'unpaid'},
+  ].forEach(d=>{
+    state.contracts.push({...d,id:state.nextContractId++,lotId:l2.id,note:'',autoRenew:false,renewMonths:12,renewPaid:'unpaid'});
+    if(l2.slots[d.slot]) l2.slots[d.slot].status='occupied';
+  });
+  curLotId=l1.id; save();
+}
+
+// ════════ HELPERS ════════
+const fmtMoney = v => Number(v).toLocaleString('ja-JP')+'円';
+const fmtDate = s => { if(!s)return'—'; const d=new Date(s); return`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`; };
+const monthsUntil = s => { const d=new Date(s),n=new Date(); return(d.getFullYear()-n.getFullYear())*12+(d.getMonth()-n.getMonth()); };
+const isExpired = s => new Date(s) < new Date();
+const paidLabel = v => ({paid:'支払済',unpaid:'未払い',partial:'一部支払い'})[v]||v;
+const paidBadge = v => { const m={paid:'badge-green',unpaid:'badge-red',partial:'badge-amber'}; return`<span class="badge ${m[v]||'badge-gray'}">${paidLabel(v)}</span>`; };
+
+function addMonths(dateStr,n){
+  const d=new Date(dateStr); d.setMonth(d.getMonth()+n); return d.toISOString().slice(0,10);
+}
+function processAutoRenewals(){
+  const t=today(); let changed=false;
+  state.contracts.forEach(c=>{
+    if(!c.autoRenew||!c.renewMonths) return;
+    let safety=0;
+    while(c.end<t&&safety<120){
+      c.start=addMonths(c.start,c.renewMonths);
+      c.end=addMonths(c.end,c.renewMonths);
+      if(c.renewPaid) c.paid=c.renewPaid;
+      changed=true; safety++;
+    }
+  });
+  if(changed) save();
+}
+function getAlerts(){ return lotContracts().filter(c=>{const mu=monthsUntil(c.end);return mu>=0&&mu<=3;}); }
+function getManualAlerts(){ return getAlerts().filter(c=>!c.autoRenew); }
+function updateAlertBadge(){
+  const n=getManualAlerts().length, b=document.getElementById('alert-badge');
+  if(n>0){b.textContent=n;b.style.display='inline-block';} else b.style.display='none';
+}
+function datesOverlap(s1,e1,s2,e2){ return !(s1>e2||e1<s2); }
+function checkOverlap(slot,start,end,excludeId=null){
+  return lotContracts().filter(c=>c.slot===slot&&!(excludeId&&c.id===excludeId)&&datesOverlap(start,end,c.start,c.end));
+}
+
+// ════════ CLOCK / NAV ════════
+function updateClock(){
+  const n=new Date(),p=v=>String(v).padStart(2,'0');
+  document.getElementById('sb-clock').textContent=`${n.getFullYear()}-${p(n.getMonth()+1)}-${p(n.getDate())} ${p(n.getHours())}:${p(n.getMinutes())}`;
+}
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  curPage=name; closePopup();
+  if(name==='dashboard') renderDashboard();
+  else if(name==='map') renderMap();
+  else if(name==='contracts') renderContracts();
+  else if(name==='alerts') renderAlerts();
+  else if(name==='report') initReport();
+}
+function refresh(){ if(curPage==='dashboard')renderDashboard(); else if(curPage==='map')renderMap(); else if(curPage==='contracts')renderContracts(); else if(curPage==='alerts')renderAlerts(); }
+
+// ════════ SIDEBAR RENAME ════════
+function startSbRename(){
+  const l=lot(); if(!l)return;
+  document.getElementById('sb-lot-name').style.display='none';
+  document.getElementById('sb-rename-wrap').style.display='block';
+  const inp=document.getElementById('sb-rename-in'); inp.value=l.name; inp.focus(); inp.select();
+}
+function sbRenameKey(e){ if(e.key==='Enter')confirmSbRename(); if(e.key==='Escape')cancelSbRename(); }
+function confirmSbRename(){
+  const l=lot(); if(!l)return;
+  const v=document.getElementById('sb-rename-in').value.trim();
+  if(v){l.name=v; save(); document.getElementById('sb-lot-name').textContent=v; if(curPage==='dashboard')renderDashboard(); notify('駐車場名を変更しました');}
+  cancelSbRename();
+}
+function cancelSbRename(){
+  document.getElementById('sb-lot-name').style.display='';
+  document.getElementById('sb-rename-wrap').style.display='none';
+}
+
+// ════════ LOT MODAL ════════
+function openLotModal(){ renderLotList(); document.getElementById('new-lot-form').style.display='none'; document.getElementById('lot-modal').classList.add('open'); }
+function closeLotModal(){ document.getElementById('lot-modal').classList.remove('open'); }
+function renderLotList(){
+  document.getElementById('lot-list').innerHTML=Object.values(state.lots).map(l=>{
+    const sc=Object.keys(l.slots).length, cc=state.contracts.filter(c=>c.lotId===l.id).length;
+    const isCur=l.id===curLotId;
+    return`<div class="lot-card${isCur?' cur':''}" onclick="switchLot('${l.id}')">
+      <div style="flex:1;min-width:0">
+        <div class="lot-name-row">
+          <div class="lot-card-name" id="lot-name-${l.id}">${l.name}${isCur?' <span style="font-size:10px;color:var(--ink3);font-weight:400">(表示中)</span>':''}</div>
+          <button onclick="event.stopPropagation();startLotRename('${l.id}')" class="btn btn-secondary btn-xs">名前変更</button>
+        </div>
+        <div id="lot-rename-${l.id}" class="lot-rename-form">
+          <input class="lot-rename-input" id="lot-rename-in-${l.id}" onkeydown="lotRenameKey(event,'${l.id}')">
+          <button onclick="event.stopPropagation();confirmLotRename('${l.id}')" class="btn btn-primary btn-xs">保存</button>
+          <button onclick="event.stopPropagation();cancelLotRename('${l.id}')" class="btn btn-secondary btn-xs">取消</button>
+        </div>
+        <div class="lot-card-meta">${l.addr||'住所未設定'} / ${sc}区画 / 契約${cc}件</div>
+      </div>
+      <button class="btn btn-danger btn-xs" style="flex-shrink:0" onclick="event.stopPropagation();deleteLot('${l.id}')">削除</button>
+    </div>`;
+  }).join('')||'<div class="empty">駐車場がありません</div>';
+}
+function startLotRename(id){
+  const l=state.lots[id]; if(!l)return;
+  document.getElementById('lot-name-'+id).style.display='none';
+  const form=document.getElementById('lot-rename-'+id);
+  form.style.display='flex';
+  const inp=document.getElementById('lot-rename-in-'+id);
+  inp.value=l.name; inp.focus(); inp.select();
+}
+function lotRenameKey(e,id){ if(e.key==='Enter')confirmLotRename(id); if(e.key==='Escape')cancelLotRename(id); }
+function confirmLotRename(id){
+  const l=state.lots[id]; if(!l)return;
+  const v=document.getElementById('lot-rename-in-'+id).value.trim();
+  if(v){
+    l.name=v; save();
+    if(id===curLotId){document.getElementById('sb-lot-name').textContent=v; if(curPage==='dashboard')renderDashboard();}
+    notify('駐車場名を変更しました');
+    renderLotList();
+  } else cancelLotRename(id);
+}
+function cancelLotRename(id){
+  document.getElementById('lot-rename-'+id).style.display='none';
+  document.getElementById('lot-name-'+id).style.display='';
+}
+function switchLot(id){
+  curLotId=id; document.getElementById('sb-lot-name').textContent=state.lots[id]?.name||'';
+  closeLotModal(); updateAlertBadge(); refresh();
+}
+function toggleNewLotForm(){ const f=document.getElementById('new-lot-form'); f.style.display=f.style.display==='none'?'block':'none'; }
+function createLot(){
+  const name=document.getElementById('nl-name').value.trim(); if(!name){notify('駐車場名を入力してください');return;}
+  const rows=Math.max(1,Math.min(20,parseInt(document.getElementById('nl-rows').value)||4));
+  const cols=Math.max(1,Math.min(20,parseInt(document.getElementById('nl-cols').value)||10));
+  const addr=document.getElementById('nl-addr').value.trim();
+  const l=mkLot(name,addr,rows,cols); state.lots[l.id]=l; save();
+  switchLot(l.id); toggleNewLotForm();
+  ['nl-name','nl-addr'].forEach(i=>document.getElementById(i).value='');
+  renderLotList(); notify(`${name} を作成しました`);
+}
+function deleteLot(id){
+  if(Object.keys(state.lots).length<=1){notify('最後の駐車場は削除できません');return;}
+  if(!confirm(`「${state.lots[id]?.name}」を削除しますか？契約データも削除されます。`))return;
+  delete state.lots[id]; state.contracts=state.contracts.filter(c=>c.lotId!==id);
+  if(curLotId===id) curLotId=Object.keys(state.lots)[0];
+  save(); document.getElementById('sb-lot-name').textContent=state.lots[curLotId]?.name||'';
+  renderLotList(); updateAlertBadge(); refresh(); notify('削除しました');
+}
+
+// ════════ DASHBOARD ════════
+function renderDashboard(){
+  const l=lot(); if(!l)return;
+  document.getElementById('sb-lot-name').textContent=l.name;
+  document.getElementById('dash-title').textContent=l.name;
+  document.getElementById('dash-lot-badge').textContent=l.name;
+  const t=today();
+  const slots=Object.values(l.slots);
+  const occSet=new Set(lotContracts().filter(c=>c.start<=t&&c.end>=t).map(c=>c.slot));
+  const income=lotContracts().filter(c=>c.start<=t&&c.end>=t).reduce((a,c)=>a+Number(c.fee),0);
+  document.getElementById('s-total').textContent=slots.length;
+  document.getElementById('s-empty').textContent=slots.length-occSet.size;
+  document.getElementById('s-occ').textContent=occSet.size;
+  document.getElementById('s-income').textContent=fmtMoney(income);
+
+  // Notices
+  const ma=getManualAlerts(), aa=getAlerts().filter(c=>c.autoRenew);
+  let notices='';
+  if(ma.length) notices+=`<div class="notice warn"><span class="notice-mark">要確認</span><div>${ma.length}件の契約が3ヶ月以内に期限切れになります</div></div>`;
+  if(aa.length) notices+=`<div class="notice info"><span class="notice-mark">自動更新</span><div>${aa.length}件の契約が自動更新されます（${aa.map(c=>c.name).join('、')}）</div></div>`;
+  document.getElementById('dash-notices').innerHTML=notices;
+
+  // Mini grid
+  const g=document.getElementById('dash-grid');
+  g.innerHTML='';
+  slots.forEach(s=>{
+    const isOcc=occSet.has(s.id), ac=activeContract(s.id);
+    const d=document.createElement('div');
+    d.className=`mg-slot ${isOcc?'o':'e'}`;
+    d.innerHTML=`<div>${s.id}</div><div style="font-size:7px;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ac?ac.name.split(' ')[0]:'—'}</div>`;
+    d.onclick=()=>{showPage('map');setTimeout(()=>openPopup(s.id),80);};
+    g.appendChild(d);
+  });
+
+  // Renew table
+  const renew=getAlerts().sort((a,b)=>new Date(a.end)-new Date(b.end));
+  const rb=document.getElementById('dash-renew');
+  if(!renew.length){rb.innerHTML='<tr><td colspan="5" class="empty">更新予定なし</td></tr>';return;}
+  rb.innerHTML=renew.map(c=>{
+    const mu=monthsUntil(c.end), cls=mu<=1?'badge-red':mu<=2?'badge-amber':'badge-blue';
+    return`<tr><td class="mono">${c.slot}</td><td>${c.name}${c.autoRenew?'<span class="badge badge-blue" style="margin-left:5px">自動</span>':''}</td>
+      <td><span class="badge ${cls}">${fmtDate(c.end)}</span></td>
+      <td class="mono">${fmtMoney(c.fee)}</td><td>${paidBadge(c.paid)}</td></tr>`;
+  }).join('');
+}
+
+// ════════ MAP ════════
+function renderMap(){
+  const l=lot(); if(!l)return;
+  const con=document.getElementById('map-container');
+  con.querySelectorAll('.slot-ov').forEach(e=>e.remove());
+  const img=document.getElementById('map-bg'), ph=document.getElementById('map-ph');
+  if(l.bgImg){img.src=l.bgImg;img.style.display='block';ph.style.display='none';}
+  else{img.style.display='none';ph.style.display='flex';}
+  con.style.width=l.containerW+'px'; con.style.height=l.bgImg?'auto':l.containerH+'px';
+  const t=today();
+  Object.values(l.slots).forEach(s=>{
+    const ac=activeContract(s.id);
+    const expOnly=!ac&&lotContracts().some(c=>c.slot===s.id&&isExpired(c.end));
+    const cls=ac?'o':expOnly?'a':'e';
+    const div=document.createElement('div');
+    div.className='slot-ov '+cls; div.dataset.slotId=s.id;
+    div.style.cssText=`left:${s.x}px;top:${s.y}px;width:${s.w}px;height:${s.h}px`;
+    div.innerHTML=`<div class="ov-id">${s.id}</div><div class="ov-nm">${ac?ac.name:'空き'}</div>${editMode?'<div class="ov-drag-hint">⤢</div>':''}`;
+    div.addEventListener('click',e=>{if(!editMode){e.stopPropagation();openPopup(s.id,div);}});
+    if(editMode){
+      initDrag(div,s);
+      const xb=document.createElement('div');
+      xb.style.cssText='position:absolute;top:2px;right:2px;width:13px;height:13px;background:rgba(255,255,255,.9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;z-index:5;color:var(--red);font-weight:700;line-height:1';
+      xb.textContent='×'; xb.title='区画を削除';
+      xb.onmousedown=e=>e.stopPropagation();
+      const t2=today();
+      const hasAc=lotContracts().some(c=>c.slot===s.id&&c.start<=t2&&c.end>=t2);
+      if(hasAc){xb.style.opacity='.3';xb.style.cursor='not-allowed';xb.title='契約中のため削除不可';}
+      else xb.onclick=e=>{e.stopPropagation();deleteSlot(s.id);};
+      div.appendChild(xb);
+    }
+    con.appendChild(div);
+  });
+}
+function toggleEdit(){
+  editMode=!editMode;
+  document.getElementById('edit-bar').style.display=editMode?'flex':'none';
+  document.getElementById('edit-btn').textContent=editMode?'編集終了':'レイアウト編集';
+  closePopup(); renderMap();
+}
+function initDrag(div,slotData){
+  let sx,sy,ox,oy; div.style.cursor='grab';
+  div.onmousedown=e=>{
+    if(e.target!==div&&!e.target.classList.contains('ov-id')&&!e.target.classList.contains('ov-nm')&&!e.target.classList.contains('ov-drag-hint'))return;
+    e.preventDefault(); sx=e.clientX;sy=e.clientY;ox=slotData.x;oy=slotData.y; div.style.cursor='grabbing';
+    const mm=ev=>{slotData.x=Math.max(0,ox+(ev.clientX-sx));slotData.y=Math.max(0,oy+(ev.clientY-sy));div.style.left=slotData.x+'px';div.style.top=slotData.y+'px';};
+    const mu=()=>{div.style.cursor='grab';save();document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);};
+    document.addEventListener('mousemove',mm); document.addEventListener('mouseup',mu);
+  };
+  const rh=document.createElement('div');
+  rh.style.cssText='position:absolute;right:0;bottom:0;width:11px;height:11px;cursor:se-resize;background:rgba(255,255,255,.3)';
+  rh.onmousedown=e=>{
+    e.preventDefault();e.stopPropagation();
+    const bsx=e.clientX,bsy=e.clientY,bw=slotData.w,bh=slotData.h;
+    const mm=ev=>{slotData.w=Math.max(28,bw+(ev.clientX-bsx));slotData.h=Math.max(18,bh+(ev.clientY-bsy));div.style.width=slotData.w+'px';div.style.height=slotData.h+'px';};
+    const mu=()=>{save();document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);};
+    document.addEventListener('mousemove',mm); document.addEventListener('mouseup',mu);
+  };
+  div.appendChild(rh);
+}
+function deleteSlot(slotId){
+  const l=lot(); if(!l)return;
+  const t=today();
+  if(lotContracts().some(c=>c.slot===slotId&&c.start<=t&&c.end>=t)){notify('契約中の区画は削除できません');return;}
+  const past=lotContracts().filter(c=>c.slot===slotId);
+  const msg=past.length?`区画 ${slotId} を削除しますか？\n過去の契約履歴 ${past.length}件も削除されます。`:`区画 ${slotId} を削除しますか？`;
+  if(!confirm(msg))return;
+  delete l.slots[slotId]; state.contracts=state.contracts.filter(c=>!(c.lotId===curLotId&&c.slot===slotId));
+  save(); closePopup(); renderMap(); renderDashboard(); notify(`区画 ${slotId} を削除しました`);
+}
+function openPopup(slotId,anchor){
+  closePopup();
+  const l=lot(); if(!l)return;
+  const s=l.slots[slotId]; if(!s)return;
+  const t=today(), ac=activeContract(slotId);
+  const all=lotContracts().filter(c=>c.slot===slotId).sort((a,b)=>new Date(b.end)-new Date(a.end));
+  const popup=document.getElementById('slot-popup');
+  document.getElementById('pp-title').textContent=`区画 ${slotId}`;
+  let rows='';
+  if(ac){
+    rows=`<div class="pp-row"><span class="pp-key">状態</span><span class="pp-val"><span class="badge badge-red">契約中</span></span></div>
+      <div class="pp-row"><span class="pp-key">契約者</span><span class="pp-val">${ac.name}</span></div>
+      ${ac.tel?`<div class="pp-row"><span class="pp-key">電話</span><span class="pp-val">${ac.tel}</span></div>`:''}
+      ${ac.email?`<div class="pp-row"><span class="pp-key">メール</span><span class="pp-val">${ac.email}</span></div>`:''}
+      <div class="pp-row"><span class="pp-key">車両</span><span class="pp-val">${(ac.plates||[]).join(' / ')||'—'}</span></div>
+      <div class="pp-row"><span class="pp-key">契約期間</span><span class="pp-val">${fmtDate(ac.start)}〜${fmtDate(ac.end)}</span></div>
+      <div class="pp-row"><span class="pp-key">月額</span><span class="pp-val mono">${fmtMoney(ac.fee)}</span></div>
+      <div class="pp-row"><span class="pp-key">支払い</span><span class="pp-val">${paidBadge(ac.paid)}</span></div>
+      ${ac.autoRenew?`<div class="pp-row"><span class="pp-key">自動更新</span><span class="pp-val"><span class="badge badge-blue">有効</span></span></div>`:''}`;
+  } else {
+    rows=`<div class="pp-row"><span class="pp-key">状態</span><span class="pp-val"><span class="badge badge-green">空き</span></span></div>`;
+    if(all.length) rows+=`<div class="pp-row"><span class="pp-key">直近の契約</span><span class="pp-val" style="font-size:10px">${fmtDate(all[0].end)} 終了</span></div>`;
+  }
+  document.getElementById('pp-rows').innerHTML=rows;
+  const btns=document.getElementById('pp-btns');
+  if(ac) btns.innerHTML=`<button class="btn btn-secondary btn-xs" onclick="openContractModal(${ac.id});closePopup()">編集</button>`;
+  else btns.innerHTML=`<button class="btn btn-primary btn-xs" onclick="openContractModal(null,'${slotId}');closePopup()">契約登録</button>`;
+  const isActiveSlot=!!ac;
+  if(!isActiveSlot) btns.innerHTML+=`<button class="btn btn-danger btn-xs" onclick="deleteSlot('${slotId}')">区画削除</button>`;
+  if(all.length>(ac?1:0)) btns.innerHTML+=`<button class="btn btn-secondary btn-xs" onclick="showSlotHist('${slotId}')">履歴(${all.length})</button>`;
+  popup.classList.add('on');
+  if(anchor){
+    const r=anchor.getBoundingClientRect();
+    popup.style.left=Math.min(r.right+6,window.innerWidth-220)+'px';
+    popup.style.top=Math.max(r.top,60)+'px';
+  }
+}
+function closePopup(){ document.getElementById('slot-popup').classList.remove('on'); }
+function showSlotHist(slotId){
+  const all=lotContracts().filter(c=>c.slot===slotId).sort((a,b)=>new Date(b.end)-new Date(a.end));
+  alert(`区画 ${slotId} の契約履歴\n\n`+all.map(c=>`${fmtDate(c.start)}〜${fmtDate(c.end)}  ${c.name}  ${fmtMoney(c.fee)}`).join('\n'));
+}
+document.addEventListener('click',e=>{
+  if(!document.getElementById('slot-popup').contains(e.target)&&!e.target.closest('.slot-ov')&&!e.target.closest('.mg-slot')) closePopup();
+});
+function openAddSlot(){ document.getElementById('as-id').value=''; document.getElementById('add-slot-modal').classList.add('open'); }
+function addSlot(){
+  const id=document.getElementById('as-id').value.trim().toUpperCase(); const l=lot(); if(!l)return;
+  if(!id){notify('区画番号を入力してください');return;}
+  if(l.slots[id]){notify('その区画番号は既に存在します');return;}
+  const ys=Object.values(l.slots).map(s=>s.y); const maxY=ys.length?Math.max(...ys):10;
+  l.slots[id]={id,status:'empty',x:10,y:maxY+60,w:70,h:50};
+  save(); closeModal('add-slot-modal'); renderMap(); notify(`区画 ${id} を追加しました`);
+}
+function uploadBg(){ document.getElementById('bg-file').click(); }
+function onBgChange(e){
+  const file=e.target.files[0]; if(!file)return;
+  const r=new FileReader(); r.onload=ev=>{const l=lot();if(!l)return;l.bgImg=ev.target.result;save();renderMap();notify('背景画像を設定しました');};
+  r.readAsDataURL(file); e.target.value='';
+}
+
+// ════════ CONTRACTS ════════
+function filterStatus(v,el){ statusFilter=v; document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); renderContracts(); }
+function renderContracts(){
+  const q=document.getElementById('c-search').value.toLowerCase();
+  const t=today();
+  let list=lotContracts();
+  if(statusFilter==='active') list=list.filter(c=>!isExpired(c.end));
+  else if(statusFilter==='expired') list=list.filter(c=>isExpired(c.end));
+  if(q) list=list.filter(c=>c.name.toLowerCase().includes(q)||(c.plates||[]).some(p=>p.toLowerCase().includes(q)));
+  list.sort((a,b)=>a.slot.localeCompare(b.slot));
+  const tb=document.getElementById('contract-body');
+  if(!list.length){tb.innerHTML='<tr><td colspan="8" class="empty">該当なし</td></tr>';return;}
+  tb.innerHTML=list.map(c=>{
+    const mu=monthsUntil(c.end), exp=isExpired(c.end);
+    let endTag='';
+    if(exp) endTag='<span class="badge badge-red" style="margin-left:4px">期限切れ</span>';
+    else if(mu<=1) endTag='<span class="badge badge-red" style="margin-left:4px">1ヶ月</span>';
+    else if(mu<=3) endTag='<span class="badge badge-amber" style="margin-left:4px">3ヶ月</span>';
+    if(c.autoRenew) endTag+='<span class="badge badge-blue" style="margin-left:4px">自動</span>';
+    const contact=[c.tel,c.email].filter(Boolean).join('<br>');
+    return`<tr>
+      <td class="mono">${c.slot}</td>
+      <td>${c.name}</td>
+      <td style="font-size:11px;color:var(--ink2)">${contact||'—'}</td>
+      <td style="font-size:11px" class="mono">${(c.plates||[]).join('<br>')||'—'}</td>
+      <td style="font-size:11px">${fmtDate(c.start)}〜${fmtDate(c.end)}${endTag}</td>
+      <td class="mono">${fmtMoney(c.fee)}</td>
+      <td>${paidBadge(c.paid)}</td>
+      <td><div style="display:flex;gap:4px">
+        <button class="btn btn-secondary btn-xs" onclick="openContractModal(${c.id})">編集</button>
+        <button class="btn btn-xs ${c.paid==='unpaid'?'btn-danger':'btn-secondary'}" onclick="togglePaid(${c.id})">${c.paid==='paid'?'未払いに':'済みに'}</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function togglePaid(id){
+  const c=state.contracts.find(c=>c.id===id); if(!c)return;
+  c.paid=c.paid==='paid'?'unpaid':'paid'; save(); renderContracts(); renderDashboard(); notify('支払い状況を更新しました');
+}
+
+// ════════ CONTRACT MODAL ════════
+function renderCmMap(){
+  const l=lot(); if(!l)return;
+  const inner=document.getElementById('cm-map-inner'); if(!inner)return;
+  inner.querySelectorAll('.sp-ov').forEach(e=>e.remove());
+  let img=inner.querySelector('img.sp-bg');
+  if(l.bgImg){
+    if(!img){img=document.createElement('img');img.className='sp-bg';img.style.cssText='display:block;max-width:100%;pointer-events:none';inner.insertBefore(img,inner.firstChild);}
+    img.src=l.bgImg; inner.querySelector('.sp-map-ph')?.remove();
+  } else {
+    img?.remove();
+    if(!inner.querySelector('.sp-map-ph')){const ph=document.createElement('div');ph.className='sp-map-ph';ph.style.cssText='display:flex;align-items:center;justify-content:center;min-height:150px;font-size:11px;color:var(--ink3)';ph.textContent='（背景画像なし）';inner.appendChild(ph);}
+  }
+  inner.style.cssText=`position:relative;display:inline-block;width:${l.containerW}px;height:${l.containerH}px`;
+  const t=today();
+  Object.values(l.slots).forEach(s=>{
+    const isSelf=editingId&&(()=>{const c=state.contracts.find(c=>c.id===editingId);return c&&c.slot===s.id;})();
+    const hasAc=lotContracts().some(c=>c.slot===s.id&&c.start<=t&&c.end>=t&&!(editingId&&c.id===editingId));
+    const ac=lotContracts().find(c=>c.slot===s.id&&c.start<=t&&c.end>=t);
+    let cls='sp-ov '; if(isSelf)cls+='self'; else if(hasAc)cls+='o'; else cls+='e';
+    if(s.id===pickedSlot)cls+=' picked';
+    const div=document.createElement('div');
+    div.className=cls; div.style.cssText=`left:${s.x}px;top:${s.y}px;width:${s.w}px;height:${s.h}px`;
+    div.innerHTML=`<div class="sp-ov-id">${s.id}</div><div class="sp-ov-nm">${isSelf?'編集中':hasAc?ac?.name.split(' ')[0]||'契約中':'空き'}</div>`;
+    if(!hasAc||isSelf) div.onclick=()=>pickSlot(s.id);
+    inner.appendChild(div);
+  });
+}
+function pickSlot(id){
+  pickedSlot=id;
+  document.getElementById('cm-slot-val').textContent=id;
+  document.getElementById('cm-slot-hint').textContent='選択済み';
+  document.getElementById('cm-slot-err').classList.remove('on');
+  renderCmMap();
+}
+function toggleAutoRenewUI(){ document.getElementById('cm-ar-opts').style.display=document.getElementById('cm-autorenew').checked?'block':'none'; }
+function openContractModal(id=null,preset=''){
+  editingId=id; pickedSlot=''; curPlates=[];
+  document.getElementById('cm-plates').innerHTML='<input class="tag-in" id="cm-plate-in" placeholder="例: 名古屋 300 あ 1234" onkeydown="addPlate(event)">';
+  document.getElementById('cm-err').classList.remove('on');
+  document.getElementById('cm-slot-err').classList.remove('on');
+  document.getElementById('cm-autorenew').checked=false;
+  document.getElementById('cm-ar-opts').style.display='none';
+  document.getElementById('cm-renew-months').value='12';
+  document.getElementById('cm-renew-paid').value='unpaid';
+  if(id){
+    const c=state.contracts.find(c=>c.id===id); if(!c)return;
+    pickedSlot=c.slot;
+    document.getElementById('cm-slot-val').textContent=c.slot;
+    document.getElementById('cm-slot-hint').textContent='選択済み（変更可）';
+    document.getElementById('cm-title').textContent='契約を編集';
+    document.getElementById('cm-del').style.display='inline-block';
+    ['cm-name','cm-tel','cm-email','cm-start','cm-end','cm-fee','cm-note'].forEach(fid=>{
+      const el=document.getElementById(fid); if(el) el.value=c[fid.replace('cm-','')]||'';
+    });
+    document.getElementById('cm-fee').value=c.fee;
+    document.getElementById('cm-paid').value=c.paid;
+    document.getElementById('cm-note').value=c.note||'';
+    curPlates=[...(c.plates||[])]; renderPlates();
+    if(c.autoRenew){
+      document.getElementById('cm-autorenew').checked=true;
+      document.getElementById('cm-ar-opts').style.display='block';
+      document.getElementById('cm-renew-months').value=String(c.renewMonths||12);
+      document.getElementById('cm-renew-paid').value=c.renewPaid||'unpaid';
+    }
+  } else {
+    document.getElementById('cm-title').textContent='新規月極契約';
+    document.getElementById('cm-del').style.display='none';
+    ['cm-name','cm-tel','cm-email','cm-start','cm-end','cm-fee','cm-note'].forEach(fid=>{ const el=document.getElementById(fid); if(el) el.value=''; });
+    document.getElementById('cm-paid').value='paid';
+    document.getElementById('cm-start').value=today();
+    if(preset){
+      pickedSlot=preset;
+      document.getElementById('cm-slot-val').textContent=preset;
+      document.getElementById('cm-slot-hint').textContent='選択済み';
+    } else {
+      document.getElementById('cm-slot-val').textContent='—';
+      document.getElementById('cm-slot-hint').textContent='下のマップから区画をクリックしてください';
+    }
+  }
+  renderCmMap();
+  document.getElementById('contract-modal').classList.add('open');
+}
+function closeContractModal(){ document.getElementById('contract-modal').classList.remove('open'); }
+function addPlate(e){
+  if(e.key==='Enter'||e.key===','){
+    e.preventDefault(); const v=document.getElementById('cm-plate-in').value.trim();
+    if(v&&!curPlates.includes(v)){curPlates.push(v);renderPlates();}
+    document.getElementById('cm-plate-in').value='';
+  }
+}
+function removePlate(i){ curPlates.splice(i,1); renderPlates(); }
+function renderPlates(){
+  const w=document.getElementById('cm-plates');
+  w.innerHTML=curPlates.map((p,i)=>`<span class="tag">${p}<span class="tag-x" onclick="removePlate(${i})">×</span></span>`).join('');
+  w.innerHTML+=`<input class="tag-in" id="cm-plate-in" placeholder="${curPlates.length?'追加...':'例: 名古屋 300 あ 1234'}" onkeydown="addPlate(event)">`;
+}
+function saveContract(){
+  const slot=pickedSlot, name=document.getElementById('cm-name').value.trim();
+  const start=document.getElementById('cm-start').value, end=document.getElementById('cm-end').value;
+  const fee=document.getElementById('cm-fee').value;
+  document.getElementById('cm-err').classList.remove('on');
+  document.getElementById('cm-slot-err').classList.remove('on');
+  const errors=[];
+  if(!slot){document.getElementById('cm-slot-err').classList.add('on');errors.push('区画を選択してください');}
+  if(!name) errors.push('契約者名を入力してください');
+  if(!start) errors.push('契約開始日を入力してください');
+  if(!end) errors.push('契約終了日を入力してください');
+  if(start&&end&&start>end) errors.push('終了日は開始日より後にしてください');
+  if(!fee) errors.push('月額料金を入力してください');
+  if(errors.length){const eb=document.getElementById('cm-err');eb.textContent=errors[0];eb.classList.add('on');return;}
+  const pi=document.getElementById('cm-plate-in');
+  if(pi&&pi.value.trim()&&!curPlates.includes(pi.value.trim())) curPlates.push(pi.value.trim());
+  const conflicts=checkOverlap(slot,start,end,editingId);
+  if(conflicts.length){const c0=conflicts[0];const eb=document.getElementById('cm-err');eb.textContent=`期間が重複しています — ${c0.name}（${fmtDate(c0.start)}〜${fmtDate(c0.end)}）`;eb.classList.add('on');return;}
+  const ar=document.getElementById('cm-autorenew').checked;
+  const data={slot,lotId:curLotId,name,tel:document.getElementById('cm-tel').value,email:document.getElementById('cm-email').value.trim(),plates:[...curPlates],start,end,fee:Number(fee),paid:document.getElementById('cm-paid').value,note:document.getElementById('cm-note').value,autoRenew:ar,renewMonths:ar?Number(document.getElementById('cm-renew-months').value):null,renewPaid:ar?document.getElementById('cm-renew-paid').value:null};
+  if(editingId){Object.assign(state.contracts.find(c=>c.id===editingId),data);notify('契約を更新しました');}
+  else{state.contracts.push({id:state.nextContractId++,...data});notify('契約を登録しました');}
+  const l=lot(); if(l) Object.keys(l.slots).forEach(sid=>{l.slots[sid].status=activeContract(sid)?'occupied':'empty';});
+  save(); updateAlertBadge(); closeContractModal(); refresh();
+}
+function deleteContract(){
+  if(!confirm('この契約を削除しますか？'))return;
+  state.contracts=state.contracts.filter(c=>c.id!==editingId);
+  const l=lot(); if(l) Object.keys(l.slots).forEach(sid=>{l.slots[sid].status=activeContract(sid)?'occupied':'empty';});
+  save(); updateAlertBadge(); closeContractModal(); refresh(); notify('削除しました');
+}
+
+// ════════ ALERTS ════════
+function renderAlerts(){
+  const alerts=getAlerts().sort((a,b)=>new Date(a.end)-new Date(b.end));
+  const el=document.getElementById('alert-content');
+  if(!alerts.length){el.innerHTML='<div class="card"><div class="card-body empty">3ヶ月以内の更新予定はありません</div></div>';return;}
+  const groups={1:[],2:[],3:[]};
+  alerts.forEach(c=>{const k=Math.min(3,Math.max(1,monthsUntil(c.end)));groups[k].push(c);});
+  const titles={1:'1ヶ月以内に更新',2:'2ヶ月以内に更新',3:'3ヶ月以内に更新'};
+  el.innerHTML=[1,2,3].filter(k=>groups[k].length).map(k=>`
+    <div class="card"><div class="card-hdr"><div class="card-title">${titles[k]}</div></div>
+    <div class="card-body no-pad"><div class="tbl-wrap"><table>
+      <thead><tr><th>区画</th><th>契約者</th><th>車両番号</th><th>更新日</th><th>月額</th><th>支払い</th><th>操作</th></tr></thead>
+      <tbody>${groups[k].map(c=>`<tr>
+        <td class="mono">${c.slot}</td>
+        <td>${c.name}${c.autoRenew?'<span class="badge badge-blue" style="margin-left:5px">自動更新</span>':''}</td>
+        <td style="font-size:11px" class="mono">${(c.plates||[]).join('<br>')||'—'}</td>
+        <td>${fmtDate(c.end)}</td>
+        <td class="mono">${fmtMoney(c.fee)}</td>
+        <td>${paidBadge(c.paid)}</td>
+        <td><button class="btn btn-secondary btn-xs" onclick="openContractModal(${c.id})">編集</button></td>
+      </tr>`).join('')}</tbody>
+    </table></div></div></div>`).join('');
+}
+
+// ════════ REPORT ════════
+function initReport(){
+  const n=new Date();
+  document.getElementById('rep-month').value=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('rep-preview').style.display='none';
+}
+function getRepList(){
+  const t=document.getElementById('rep-type').value;
+  let list=lotContracts();
+  if(t==='unpaid') list=list.filter(c=>c.paid!=='paid');
+  else if(t==='renew') list=list.filter(c=>monthsUntil(c.end)>=0&&monthsUntil(c.end)<=3);
+  return{t,list};
+}
+function previewReport(){
+  const{t,list}=getRepList(), month=document.getElementById('rep-month').value;
+  const titles={contracts:`月極契約一覧 (${month})`,unpaid:`未払い一覧 (${month})`,renew:`更新予定一覧 (${month})`};
+  document.getElementById('rep-preview').style.display='block';
+  document.getElementById('rep-preview-title').textContent=titles[t];
+  document.getElementById('rep-thead').innerHTML='<tr><th>区画</th><th>契約者名</th><th>電話</th><th>メール</th><th>車両番号</th><th>契約期間</th><th>月額</th><th>支払い</th></tr>';
+  document.getElementById('rep-tbody').innerHTML=list.map(c=>`<tr>
+    <td class="mono">${c.slot}</td><td>${c.name}</td><td>${c.tel||'—'}</td><td>${c.email||'—'}</td>
+    <td style="font-size:11px" class="mono">${(c.plates||[]).join(' / ')||'—'}</td>
+    <td style="font-size:11px">${fmtDate(c.start)}〜${fmtDate(c.end)}</td>
+    <td class="mono">${fmtMoney(c.fee)}</td><td>${paidLabel(c.paid)}</td>
+  </tr>`).join('')||'<tr><td colspan="8" class="empty">データなし</td></tr>';
+}
+function exportCSV(){
+  const{t,list}=getRepList(), month=document.getElementById('rep-month').value;
+  const header='駐車場,区画,契約者名,電話,メール,車両番号,契約開始,契約終了,月額,支払い,備考';
+  const rows=list.map(c=>[state.lots[c.lotId]?.name||'',c.slot,c.name,c.tel||'',c.email||'',(c.plates||[]).join('/'),c.start,c.end,c.fee,paidLabel(c.paid),c.note||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));
+  const csv='\uFEFF'+[header,...rows].join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download=`駐車場_${t}_${month}.csv`; a.click(); URL.revokeObjectURL(url);
+  notify('CSVをダウンロードしました');
+}
+
+// ════════ NOTIFY ════════
+function notify(msg){
+  const n=document.getElementById('notif'); n.textContent=msg; n.classList.add('on');
+  clearTimeout(n._t); n._t=setTimeout(()=>n.classList.remove('on'),2200);
+}
+
+// ════════ UTILS ════════
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+['lot-modal','contract-modal','add-slot-modal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+});
+
+// ════════ INIT ════════
+loadState();
+processAutoRenewals();
+document.getElementById('sb-lot-name').textContent=lot()?.name||'';
+updateAlertBadge(); renderDashboard(); updateClock();
+setInterval(updateClock,30000);
+setInterval(()=>{processAutoRenewals();updateAlertBadge();refresh();},3600000);
+</script>
+</body>
+</html>
