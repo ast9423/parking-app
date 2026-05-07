@@ -253,61 +253,79 @@ tr:hover td{background:var(--paper)}
 /* ── Mobile responsive ── */
 @media (max-width:640px){
   /* layout */
-  .wrap{flex-direction:column}
+  .wrap{flex-direction:column;overflow:hidden}
   .side{display:none}
-  .main{height:100svh;height:100dvh}
-  .topbar{padding:.625rem 1rem;gap:8px}
-  .topbar-title{font-size:13px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .topbar-right{flex-shrink:0}
-  .mobile-topbar-btn{display:flex;align-items:center;gap:6px}
-  .body{padding:.75rem .875rem;padding-bottom:calc(68px + env(safe-area-inset-bottom));overflow-y:auto}
+  .main{width:100%;min-width:0;height:100svh;display:flex;flex-direction:column}
+  .topbar{padding:.625rem 1rem;gap:8px;flex-shrink:0}
+  .topbar-title{font-size:13px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .topbar-right{flex-shrink:0;display:flex;gap:6px}
+  .mobile-topbar-btn{display:flex}
+  .body{flex:1;overflow-y:auto;padding:.75rem .875rem;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
 
-  /* stats */
+  /* stats: 2カラム */
   .stats{grid-template-columns:1fr 1fr;gap:1px}
   .stat{padding:.625rem .75rem}
   .stat-val{font-size:18px}
+  .stat-sub{display:none}
 
-  /* forms */
+  /* forms: 1カラム、iOS zoom防止 */
   .fgrid,.fgrid3{grid-template-columns:1fr}
-  input[type=text],input[type=tel],input[type=date],input[type=number],input[type=month],select,textarea{font-size:16px!important;padding:9px 11px}
-  .search-input{width:130px;font-size:13px!important}
+  input[type=text],input[type=tel],input[type=date],
+  input[type=number],input[type=month],select,textarea{
+    font-size:16px!important;padding:9px 11px;-webkit-appearance:none}
+  .search-input{width:120px;font-size:14px!important}
 
-  /* modal */
-  .modal-bg{align-items:flex-end}
-  .modal{border-radius:12px 12px 0 0;width:100%;max-width:100%;max-height:90dvh;padding:1rem;overflow-y:auto}
-  .modal-hdr{padding-bottom:.75rem;margin-bottom:.875rem}
+  /* modal: 画面下部から出現 */
+  .modal-bg{align-items:flex-end;padding:0}
+  .modal{
+    border-radius:14px 14px 0 0;
+    width:100%;max-width:100%;
+    max-height:88svh;
+    padding:1rem 1rem calc(1rem + env(safe-area-inset-bottom));
+    overflow-y:auto
+  }
+  .modal-hdr{padding-bottom:.75rem;margin-bottom:.75rem}
 
-  /* tables → card list on mobile */
-  .tbl-wrap{overflow-x:visible}
-  .mob-hide-col{display:none}
-  table{font-size:12px}
-  th{font-size:10px;padding:6px 8px}
-  td{padding:7px 8px}
+  /* テーブル: 横スクロール */
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{font-size:11px;min-width:520px}
+  th{font-size:10px;padding:6px 8px;white-space:nowrap}
+  td{padding:7px 8px;white-space:nowrap}
+  .mono{font-size:10px}
 
   /* map */
-  .map-container{overflow:auto;-webkit-overflow-scrolling:touch;max-height:calc(100dvh - 200px)}
-  .sp-map{max-height:220px;overflow:auto;-webkit-overflow-scrolling:touch}
+  .map-container{
+    overflow:auto;-webkit-overflow-scrolling:touch;
+    max-height:calc(100svh - 180px)
+  }
+  .sp-map{max-height:200px;overflow:auto;-webkit-overflow-scrolling:touch}
+  .edit-bar{flex-direction:column;align-items:flex-start;gap:6px}
 
-  /* slot popup */
-  .slot-popup{position:fixed;bottom:68px;left:8px;right:8px;top:auto;max-height:55dvh;overflow-y:auto;border-radius:6px}
+  /* slot popup: 画面下部固定 */
+  .slot-popup{
+    position:fixed;bottom:calc(64px + env(safe-area-inset-bottom));
+    left:8px;right:8px;top:auto;
+    max-height:50svh;overflow-y:auto;border-radius:8px
+  }
 
-  /* nav */
+  /* bottom nav */
   .mobile-nav{display:flex}
 
-  /* notices */
+  /* misc */
   .notice{font-size:11px}
-
-  /* mini-grid */
-  .mg-slot{min-width:34px;font-size:7px}
-
-  /* autorenew box */
+  .mg-slot{min-width:32px;font-size:7px}
   .autorenew-box{padding:.625rem .75rem}
-
-  /* card padding */
   .card-body{padding:.75rem}
-
-  /* topbar action btns */
   .topbar-map-btns .btn{font-size:11px;padding:4px 9px}
+  .legend{flex-wrap:wrap;gap:8px}
+  .btn-row{flex-wrap:wrap}
+
+  /* 契約モーダルのマップピッカー高さ制限 */
+  #cm-map{max-height:180px;overflow:auto}
+
+  /* 検索行はボタンを小さく */
+  .topbar .search-input{width:100px}
+  .topbar .btn-sm{padding:5px 8px;font-size:11px}
 }
 @media(min-width:641px){.mobile-nav{display:none}}
 </style>
@@ -780,28 +798,12 @@ function mkLot(name, addr, rows, cols) {
   return {id,name,addr,bgImg:null,containerW:cW,containerH:cH,slots};
 }
 async function initDemo() {
-  const now=new Date(), y=now.getFullYear(), m=now.getMonth();
-  const dt=(yr,mo,d)=>new Date(yr,mo,d).toISOString().slice(0,10);
-  const l1=mkLot('本社第一駐車場','名古屋市中区栄1-1',4,10); state.lots[l1.id]=l1;
-  [
-    {slot:'A-01',name:'山田 太郎',tel:'052-111-2222',email:'yamada@example.com',plates:['名古屋 300 あ 1234'],start:dt(y-1,0,1),end:dt(y,m+1,31),fee:15000,paid:'paid'},
-    {slot:'A-02',name:'鈴木 花子',tel:'090-3333-4444',email:'',plates:['愛知 501 い 8832','愛知 502 い 9999'],start:dt(y-1,3,1),end:dt(y,m,28),fee:12000,paid:'unpaid'},
-    {slot:'B-03',name:'田中 一郎',tel:'',email:'tanaka@co.jp',plates:['三河 100 う 0011'],start:dt(y,m-5,1),end:dt(y,m+2,28),fee:13000,paid:'paid'},
-    {slot:'B-05',name:'伊藤 次郎',tel:'080-5555-6666',email:'',plates:['名古屋 800 え 5500'],start:dt(y-2,6,1),end:dt(y,m,31),fee:14000,paid:'partial'},
-    {slot:'C-04',name:'渡辺 三郎',tel:'052-777-8888',email:'',plates:['岐阜 200 お 3210'],start:dt(y,m-2,1),end:dt(y,m+4,30),fee:11000,paid:'paid'},
-    {slot:'D-07',name:'小林 四郎',tel:'',email:'kobayashi@example.com',plates:['三重 400 か 7777'],start:dt(y-1,9,1),end:dt(y,m+1,28),fee:16000,paid:'paid'},
-  ].forEach(d=>{
-    state.contracts.push({...d,id:state.nextContractId++,lotId:l1.id,note:'',autoRenew:false,renewMonths:12,renewPaid:'unpaid'});
-    if(l1.slots[d.slot]) l1.slots[d.slot].status='occupied';
-  });
-  const l2=mkLot('南館駐車場','名古屋市中区栄1-2',3,8); state.lots[l2.id]=l2;
-  [{slot:'A-01',name:'加藤 五郎',tel:'090-9999-0000',email:'',plates:['名古屋 100 き 2222'],start:dt(y,m-1,1),end:dt(y,m+2,31),fee:12500,paid:'paid'},
-   {slot:'B-02',name:'松本 六郎',tel:'052-222-3333',email:'',plates:['愛知 300 く 4444'],start:dt(y,m-3,1),end:dt(y,m+1,28),fee:11000,paid:'unpaid'},
-  ].forEach(d=>{
-    state.contracts.push({...d,id:state.nextContractId++,lotId:l2.id,note:'',autoRenew:false,renewMonths:12,renewPaid:'unpaid'});
-    if(l2.slots[d.slot]) l2.slots[d.slot].status='occupied';
-  });
-  curLotId=l1.id; await save();
+  // 初期データなし — 空の駐車場1件のみ作成
+  const l1 = mkLot('駐車場', '', 4, 10);
+  state.lots[l1.id] = l1;
+  state.contracts = [];
+  curLotId = l1.id;
+  await save();
 }
 
 // ════════ HELPERS ════════
